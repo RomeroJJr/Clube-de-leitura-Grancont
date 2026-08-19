@@ -201,7 +201,7 @@ export function EmployeesTab({ employees, books, loans, upsert, remove, extendLo
 }
 
 function EmployeeForm({ initial, onSave, onCancel }: any) {
-  const [form, setForm] = useState({ name: "", department: "", email: "", ...initial });
+  const [form, setForm] = useState({ name: "", department: "", email: "", role: "user", ...initial });
   return (
     <div className="space-y-4">
       <div>
@@ -215,7 +215,14 @@ function EmployeeForm({ initial, onSave, onCancel }: any) {
       <div>
         <FieldLabel>E-mail *</FieldLabel>
         <input type="email" className={inputClass} style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nome@grancont.com.br" />
-        <p className="text-[10px] text-slate-400 mt-1">Usado para enviar lembretes automáticos de devolução.</p>
+        <p className="text-[10px] text-slate-400 mt-1">Usado para enviar lembretes automáticos de devolução e acesso.</p>
+      </div>
+      <div>
+        <FieldLabel>Acesso à Plataforma</FieldLabel>
+        <select className={inputClass} style={inputStyle} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+          <option value="user">Usuário Comum (Leitura e sugestões)</option>
+          <option value="admin">Administrador (Gestão do acervo)</option>
+        </select>
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ color: COLORS.INK, backgroundColor: COLORS.BORDER }}>Cancelar</button>

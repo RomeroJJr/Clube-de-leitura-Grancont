@@ -60,27 +60,36 @@ export default function App() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u) {
-        if (u.email === 'rjuniiior40@gmail.com') {
-          setIsAdmin(true);
-        } else {
-          try {
-            const adminDoc = await getDoc(doc(db, 'admins', u.uid));
-            setIsAdmin(adminDoc.exists());
-          } catch (e) {
-            setIsAdmin(false);
-          }
-        }
-      } else {
-        setIsAdmin(false);
-      }
       setAuthLoading(false);
     });
     return unsub;
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    const checkAdmin = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+      if (user.email === 'rjuniiior40@gmail.com') {
+        setIsAdmin(true);
+        return;
+      }
+      try {
+        const adminDoc = await getDoc(doc(db, 'admins', user.email || user.uid));
+        if (adminDoc.exists()) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(employees.some(e => e.email === user.email && e.role === 'admin'));
+        }
+      } catch (e) {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+  }, [user, employees]);
+
+  useEffect(() => {
     setLoading(true);
 
     const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (snap) => {
@@ -107,7 +116,7 @@ export default function App() {
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'suggestions'));
 
     return () => { unsubSettings(); unsubEmployees(); unsubBooks(); unsubLoans(); unsubSuggestions(); };
-  }, [user, triggerNotifications]);
+  }, [triggerNotifications]);
 
   const handleLogin = async () => {
     try {
@@ -141,8 +150,34 @@ export default function App() {
     }
   };
 
-  const upsertEmployee = (item: any) => upsertDoc('employees', item, "Colaborador salvo.");
-  const removeEmployee = (id: string) => deleteDocItem('employees', id, "Colaborador removido.");
+  const upsertEmployee = async (item: any) => {
+    try {
+      await setDoc(doc(db, 'employees', item.id), item);
+      if (item.email) {
+        if (item.role === 'admin') {
+          await setDoc(doc(db, 'admins', item.email), { role: 'admin' });
+        } else {
+          try { await deleteDoc(doc(db, 'admins', item.email)); } catch(e) {}
+        }
+      }
+      notify("Colaborador salvo.");
+    } catch (e: any) {
+      notify(e.message || "Erro ao salvar.", "error");
+    }
+  };
+
+  const removeEmployee = async (id: string) => {
+    try {
+      const emp = employees.find(e => e.id === id);
+      await deleteDoc(doc(db, 'employees', id));
+      if (emp && emp.email && emp.role === 'admin') {
+        try { await deleteDoc(doc(db, 'admins', emp.email)); } catch(e) {}
+      }
+      notify("Colaborador removido.");
+    } catch (e: any) {
+      notify(e.message || "Erro ao remover.", "error");
+    }
+  };
   
   const upsertBook = (item: any) => upsertDoc('books', item, "Título salvo.");
   const removeBook = (id: string) => deleteDocItem('books', id, "Título removido.");
@@ -183,28 +218,9 @@ export default function App() {
     }
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><p className="text-slate-500 font-medium">Carregando...</p></div>;
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center border border-slate-100">
-          <div className="w-16 h-16 mx-auto bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-6 text-white">
-            <BookOpen size={32} />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2 brand-font tracking-tight">Clube de Leitura</h1>
-          <p className="text-sm text-slate-500 mb-8 leading-relaxed">Faça login com sua conta Google para acessar o acervo da Grancont.</p>
-          <button onClick={handleLogin} className="w-full py-3.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-transform hover:-translate-y-0.5" style={{ backgroundColor: COLORS.PURPLE, boxShadow: `0 8px 20px -6px ${COLORS.PURPLE}` }}>
-             Entrar com Google
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const overdueCount = loans.filter((l) => !l.actualReturnDate && daysUntil(l.expectedReturnDate) < 0).length;
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.BG }}>
         <div className="flex flex-col items-center gap-3">
@@ -288,23 +304,37 @@ export default function App() {
               <Settings size={18} /> Configurações
             </button>
           )}
-          <div className="flex items-center justify-between gap-3 px-2 py-2">
-            <div className="flex items-center gap-3 min-w-0">
-              {user?.photoURL ? (
-                <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full shrink-0" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                  {user?.email?.substring(0, 2).toUpperCase() || 'U'}
+          <div className="flex items-center justify-between gap-3 px-2 py-2 w-full">
+            {user ? (
+              <>
+                <div className="flex items-center gap-3 min-w-0">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                      {user?.email?.substring(0, 2).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-white text-xs font-semibold truncate">{user?.displayName || user?.email?.split('@')[0]}</p>
+                    <p className="text-white/50 text-[10px] truncate">{isAdmin ? "Administrador" : "Leitor"}</p>
+                  </div>
                 </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-white text-xs font-semibold truncate">{user?.displayName || user?.email?.split('@')[0]}</p>
-                <p className="text-white/50 text-[10px] truncate">{isAdmin ? "Administrador" : "Leitor"}</p>
+                <button onClick={handleLogout} title="Sair" className="text-white/50 hover:text-white transition-colors">
+                  <LogOut size={16} />
+                </button>
+              </>
+            ) : (
+              <div className="w-full">
+                <button onClick={handleLogin} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-white/80 hover:bg-white/15 transition-colors">
+                  <ShieldAlert size={18} /> Acesso Admin
+                </button>
+                <div className="mt-4 px-3 py-2">
+                  <p className="text-white/70 text-xs font-semibold">Modo Leitura</p>
+                  <p className="text-white/40 text-[10px] mt-0.5">Apenas visualização do acervo</p>
+                </div>
               </div>
-            </div>
-            <button onClick={handleLogout} title="Sair" className="text-white/50 hover:text-white transition-colors">
-              <LogOut size={16} />
-            </button>
+            )}
           </div>
         </div>
       </aside>

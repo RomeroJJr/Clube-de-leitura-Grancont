@@ -121,43 +121,7 @@ export function Modal({ open, title, onClose, children, wide }: any) {
   );
 }
 
-export function LoginModal({ open, onClose, onLogin }: any) {
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
-  const [error, setError] = useState("");
 
-  if (!open) return null;
-
-  const handleConfirm = () => {
-    if (onLogin(user, pass)) {
-      setUser("");
-      setPass("");
-      setError("");
-    } else {
-      setError("Usuário ou senha incorretos.");
-    }
-  };
-
-  return (
-    <Modal open={open} title="Acesso Restrito" onClose={onClose}>
-      <div className="space-y-4">
-        {error && <div className="text-red-600 text-sm font-semibold mb-2 bg-red-50 p-2 rounded-lg">{error}</div>}
-        <div>
-          <FieldLabel>Usuário</FieldLabel>
-          <input className={inputClass} style={inputStyle} value={user} onChange={(e) => setUser(e.target.value)} placeholder="Beatriz ou Romero" />
-        </div>
-        <div>
-          <FieldLabel>Senha</FieldLabel>
-          <input type="password" className={inputClass} style={inputStyle} value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleConfirm()} />
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ color: COLORS.INK, backgroundColor: COLORS.BORDER }}>Cancelar</button>
-          <button onClick={handleConfirm} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: COLORS.PURPLE }}>Entrar</button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
 
 export function ReturnModal({ open, loan, onClose, onConfirm }: any) {
   const [comment, setComment] = useState("");

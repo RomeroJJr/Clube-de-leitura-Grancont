@@ -14,7 +14,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.email == 'rjuniiior40@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
       );
     }
 
@@ -26,15 +26,16 @@ service cloud.firestore {
     }
 
     function isValidEmployee(data) {
-      return data.keys().hasAll(['name', 'email']) 
-        && (data.keys().size() == 2 || (data.keys().size() == 3 && 'department' in data))
+      return data.keys().hasAll(['name', 'email', 'role']) 
+        && (data.keys().size() == 3 || (data.keys().size() == 4 && 'department' in data))
         && data.name is string && data.name.size() > 0 && data.name.size() <= 100
         && data.email is string && data.email.size() <= 150
+        && data.role in ['user', 'admin']
         && (!('department' in data) || (data.department is string && data.department.size() <= 100));
     }
 
     match /employees/{empId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isAdmin() && isValidId(empId) && isValidEmployee(incoming());
       allow update: if isAdmin() && isValidId(empId) && isValidEmployee(incoming());
       allow delete: if isAdmin() && isValidId(empId);
@@ -52,7 +53,7 @@ service cloud.firestore {
     }
 
     match /books/{bookId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isAdmin() && isValidId(bookId) && isValidBook(incoming());
       allow update: if isAdmin() && isValidId(bookId) && isValidBook(incoming());
       allow delete: if isAdmin() && isValidId(bookId);
@@ -72,7 +73,7 @@ service cloud.firestore {
     }
 
     match /loans/{loanId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow create: if isAdmin() && isValidId(loanId) && isValidLoan(incoming());
       allow update: if isAdmin() && isValidId(loanId) && isValidLoan(incoming());
       allow delete: if isAdmin() && isValidId(loanId);
@@ -90,9 +91,9 @@ service cloud.firestore {
     }
 
     match /suggestions/{sugId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && isValidId(sugId) && isValidSuggestion(incoming()) && incoming().status == 'pending';
-      allow update: if isSignedIn() && isValidId(sugId) && isValidSuggestion(incoming()) && (
+      allow read: if true;
+      allow create: if true && isValidId(sugId) && isValidSuggestion(incoming()) && incoming().status == 'pending';
+      allow update: if true && isValidId(sugId) && isValidSuggestion(incoming()) && (
         isAdmin() ||
         (incoming().diff(existing()).affectedKeys().hasOnly(['voters']))
       );
@@ -100,11 +101,11 @@ service cloud.firestore {
     }
 
     match /admins/{adminId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
     match /settings/{docId} {
-      allow read: if isSignedIn();
+      allow read: if true;
       allow write: if isAdmin();
     }
   }
