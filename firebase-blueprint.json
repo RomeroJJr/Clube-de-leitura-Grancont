@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "A staff member who can borrow books",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 150
+        }
+      },
+      "required": ["name", "email"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "A book available in the corporate library",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "author": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "copies": {
+          "type": "number"
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": ["title", "copies"]
+    },
+    "Loan": {
+      "title": "Loan",
+      "description": "A record of an employee borrowing a book",
+      "type": "object",
+      "properties": {
+        "employeeId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "bookId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "checkoutDate": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "expectedReturnDate": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "actualReturnDate": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "renewals": {
+          "type": "number"
+        },
+        "feedback": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "required": ["employeeId", "bookId", "checkoutDate", "expectedReturnDate"]
+    },
+    "Suggestion": {
+      "title": "Suggestion",
+      "description": "A book suggestion from an employee",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "author": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "suggesterId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "voters": {
+          "type": "array"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "purchased"]
+        }
+      },
+      "required": ["title", "suggesterId", "voters", "status"]
+    }
+  },
+  "firestore": {
+    "employees": {
+      "schema": { "$ref": "#/entities/Employee" },
+      "description": "Stores all registered employees."
+    },
+    "books": {
+      "schema": { "$ref": "#/entities/Book" },
+      "description": "Stores all available books in the library."
+    },
+    "loans": {
+      "schema": { "$ref": "#/entities/Loan" },
+      "description": "Stores all book loans."
+    },
+    "suggestions": {
+      "schema": { "$ref": "#/entities/Suggestion" },
+      "description": "Stores all book suggestions."
+    }
+  }
+}
