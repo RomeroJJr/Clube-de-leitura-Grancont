@@ -191,8 +191,10 @@ function LoanForm({ initial, employees, books, loans, onSave, onCancel }: any) {
             <option value="">Selecione...</option>
             {books.map((b: any) => {
               const avail = availableCopies(b, loans.filter((l: any) => l.id !== form.id));
-              const disabled = !form.id && avail <= 0;
-              return <option key={b.id} value={b.id} disabled={disabled}>{b.title}{disabled ? " (indisponível)" : ""}</option>;
+              const isMaintenance = b.maintenance;
+              const disabled = !form.id && (avail <= 0 || isMaintenance);
+              const suffix = isMaintenance ? " (em manutenção)" : " (indisponível)";
+              return <option key={b.id} value={b.id} disabled={disabled}>{b.title}{disabled ? suffix : ""}</option>;
             })}
           </select>
         </div>

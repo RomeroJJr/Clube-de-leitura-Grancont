@@ -334,7 +334,19 @@ export default function App() {
           >
             {tab === "dashboard" && <Dashboard employees={employees} books={books} loans={loans} suggestions={suggestions} onGoTo={setTab} notify={notify} />}
             {tab === "employees" && (
-              <EmployeesTab employees={employees} books={books} loans={loans} upsert={upsertEmployee} remove={removeEmployee} extendLoan={extendLoan} onReturnRequest={setReturnModal} notify={notify} isAdmin={isAdmin} />
+              <EmployeesTab 
+                employees={employees} 
+                books={books} 
+                loans={loans} 
+                upsert={upsertEmployee} 
+                remove={removeEmployee} 
+                extendLoan={extendLoan} 
+                onReturnRequest={setReturnModal} 
+                notify={notify} 
+                isAdmin={isAdmin} 
+                upsertLoan={saveLoanWithNotice} 
+                defaultLoanDays={settings.defaultLoanDays} 
+              />
             )}
             {tab === "books" && <BooksTab books={books} loans={loans} upsert={upsertBook} remove={removeBook} notify={notify} isAdmin={isAdmin} />}
             {tab === "loans" && (

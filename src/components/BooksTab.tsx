@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { BookOpen, Pencil, Trash2, AlertCircle, Upload, X } from 'lucide-react';
+import { BookOpen, Pencil, Trash2, AlertCircle, Upload, X, CheckCircle2, Wrench } from 'lucide-react';
 import { uid, downloadCSV, availableCopies, tagStyle, COLORS, compressImage } from '../lib/utils';
 import { TabHeader, ExportBtn, EmptyState, IconBtn, Modal, ConfirmDialog, FieldLabel, inputClass, inputStyle } from './Shared';
 
@@ -31,7 +31,8 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
       category: form.category?.trim(), 
       totalCopies: Number(form.totalCopies) || 1,
       description: form.description || "",
-      coverUrl: form.coverUrl || "" 
+      coverUrl: form.coverUrl || "",
+      maintenance: Boolean(form.maintenance)
     });
     setModal(null);
   }
@@ -96,6 +97,22 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
           {filtered.map((b: any) => {
             const avail = availableCopies(b, loans);
             const bCat = b.category || b.area;
+            const isMaintenance = b.maintenance;
+            
+            let statusLabel = "Disponível";
+            let statusStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
+            let StatusIcon = CheckCircle2;
+            
+            if (isMaintenance) {
+              statusLabel = "Em Manutenção";
+              statusStyle = "bg-amber-50 text-amber-700 border-amber-200";
+              StatusIcon = Wrench;
+            } else if (avail === 0) {
+              statusLabel = "Emprestado";
+              statusStyle = "bg-red-50 text-red-700 border-red-200";
+              StatusIcon = AlertCircle;
+            }
+
             return (
               <div 
                 key={b.id} 
@@ -115,12 +132,10 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
                       </div>
                     )}
                     <div className="flex flex-col items-start">
-                      {avail < (b.totalCopies || 1) && (
-                        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-100 mb-1" title="Existem exemplares emprestados deste título">
-                          <AlertCircle size={10} />
-                          Emprestado
-                        </div>
-                      )}
+                      <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${statusStyle}`} title={isMaintenance ? "Este título está em manutenção." : ""}>
+                        <StatusIcon size={12} />
+                        {statusLabel}
+                      </div>
                     </div>
                   </div>
                   {isAdmin && (
@@ -195,9 +210,15 @@ function BookDetailsModal({ open, book, onClose, loans }: any) {
             {book.category && (
               <span className="text-sm font-medium rounded-full px-3 py-1" style={tagStyle(book.category)}>{book.category}</span>
             )}
-            <span className="text-sm font-bold px-3 py-1 rounded-full bg-gray-100" style={{ color: avail > 0 ? "#1F9D64" : "#C63C3C" }}>
-              {avail} / {book.totalCopies || 1} disponíveis
-            </span>
+            {book.maintenance ? (
+              <span className="text-sm font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+                <Wrench size={14} /> Em Manutenção
+              </span>
+            ) : (
+              <span className="text-sm font-bold px-3 py-1 rounded-full bg-gray-100" style={{ color: avail > 0 ? "#1F9D64" : "#C63C3C" }}>
+                {avail} / {book.totalCopies || 1} disponíveis
+              </span>
+            )}
           </div>
 
           {book.description ? (
@@ -222,7 +243,7 @@ function BookDetailsModal({ open, book, onClose, loans }: any) {
 }
 
 function BookForm({ initial, onSave, onCancel }: any) {
-  const [form, setForm] = useState({ title: "", author: "", category: initial?.category || initial?.area || "", totalCopies: 1, description: "", coverUrl: "", ...initial });
+  const [form, setForm] = useState({ title: "", author: "", category: initial?.category || initial?.area || "", totalCopies: 1, description: "", coverUrl: "", maintenance: false, ...initial });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -304,6 +325,17 @@ function BookForm({ initial, onSave, onCancel }: any) {
           <FieldLabel>Exemplares</FieldLabel>
           <input type="number" min="1" className={inputClass} style={inputStyle} value={form.totalCopies} onChange={(e) => setForm({ ...form, totalCopies: e.target.value })} />
         </div>
+      </div>
+      <div className="pt-2 border-t border-gray-100">
+        <label className="flex items-center gap-2 cursor-pointer mt-2">
+          <input 
+            type="checkbox" 
+            checked={form.maintenance} 
+            onChange={(e) => setForm({...form, maintenance: e.target.checked})} 
+            className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" 
+          />
+          <span className="text-sm font-medium text-slate-700">Livro em manutenção (indisponível para empréstimo)</span>
+        </label>
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ color: COLORS.INK, backgroundColor: COLORS.BORDER }}>Cancelar</button>
