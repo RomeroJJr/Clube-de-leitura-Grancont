@@ -8,6 +8,7 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
   const [modal, setModal] = useState<any>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("Todas");
+  const [selectedBook, setSelectedBook] = useState<any>(null);
 
   const categories = ["Todas", ...Array.from(new Set(books.map((b: any) => b.category || b.area).filter(Boolean))) as string[]];
 
@@ -96,7 +97,12 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
             const avail = availableCopies(b, loans);
             const bCat = b.category || b.area;
             return (
-              <div key={b.id} className="bg-white rounded-2xl border p-4 flex flex-col hover:shadow-md transition-shadow" style={{ borderColor: COLORS.BORDER }}>
+              <div 
+                key={b.id} 
+                onClick={() => setSelectedBook(b)}
+                className="bg-white rounded-2xl border p-4 flex flex-col hover:shadow-md transition-shadow cursor-pointer relative" 
+                style={{ borderColor: COLORS.BORDER }}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3">
                     {b.coverUrl ? (
@@ -118,7 +124,7 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
                     </div>
                   </div>
                   {isAdmin && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <IconBtn onClick={() => setModal(b)}><Pencil size={14} /></IconBtn>
                       <IconBtn danger onClick={() => setConfirmId(b.id)}><Trash2 size={14} /></IconBtn>
                     </div>
@@ -152,7 +158,66 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
       </Modal>
 
       <ConfirmDialog open={!!confirmId} title="Excluir título?" message="Essa ação não pode ser desfeita." onConfirm={() => handleDelete(confirmId!)} onCancel={() => setConfirmId(null)} />
+      
+      <BookDetailsModal open={!!selectedBook} book={selectedBook} onClose={() => setSelectedBook(null)} loans={loans} />
     </div>
+  );
+}
+
+function BookDetailsModal({ open, book, onClose, loans }: any) {
+  if (!open || !book) return null;
+  const avail = availableCopies(book, loans);
+
+  return (
+    <Modal open={open} title="Detalhes do Livro" onClose={onClose}>
+      <div className="flex flex-col md:flex-row gap-6">
+        {book.coverUrl ? (
+          <div className="w-full md:w-1/3 max-w-[160px] mx-auto md:mx-0 shrink-0">
+            <div className="rounded-xl overflow-hidden shadow-md border" style={{ borderColor: COLORS.BORDER }}>
+              <img src={book.coverUrl} alt={book.title} className="w-full h-auto object-cover aspect-[2/3]" />
+            </div>
+          </div>
+        ) : (
+          <div className="w-full md:w-1/3 max-w-[160px] mx-auto md:mx-0 shrink-0">
+            <div className="rounded-xl flex items-center justify-center bg-gray-50 border border-gray-200 aspect-[2/3]">
+              <BookOpen size={48} style={{ color: COLORS.MUTED }} />
+            </div>
+          </div>
+        )}
+        
+        <div className="flex-1 min-w-0 flex flex-col space-y-4">
+          <div>
+            <h3 className="text-xl font-bold leading-tight" style={{ color: COLORS.INK }}>{book.title}</h3>
+            <p className="text-base mt-1" style={{ color: COLORS.MUTED }}>{book.author || "Autor desconhecido"}</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {book.category && (
+              <span className="text-sm font-medium rounded-full px-3 py-1" style={tagStyle(book.category)}>{book.category}</span>
+            )}
+            <span className="text-sm font-bold px-3 py-1 rounded-full bg-gray-100" style={{ color: avail > 0 ? "#1F9D64" : "#C63C3C" }}>
+              {avail} / {book.totalCopies || 1} disponíveis
+            </span>
+          </div>
+
+          {book.description ? (
+            <div className="mt-2 bg-gray-50 p-4 rounded-xl border" style={{ borderColor: COLORS.BORDER }}>
+              <h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: COLORS.MUTED }}>Sinopse</h4>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: COLORS.INK }}>
+                {book.description}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm italic" style={{ color: COLORS.MUTED }}>Nenhuma descrição informada para este livro.</p>
+          )}
+        </div>
+      </div>
+      <div className="flex justify-end pt-6">
+        <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors" style={{ backgroundColor: COLORS.PURPLE }}>
+          Fechar
+        </button>
+      </div>
+    </Modal>
   );
 }
 
