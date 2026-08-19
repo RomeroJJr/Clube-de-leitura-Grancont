@@ -6,7 +6,7 @@ import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
 
 import { Bell, Users, BookOpen, ArrowRightLeft, Settings, ShieldAlert, LogOut, Lightbulb } from "lucide-react";
 import { todayISO, addDays, daysUntil, COLORS } from "./lib/utils";
-import { Logomark, Toast, ReturnModal } from "./components/Shared";
+import { Logomark, Toast, ReturnModal, LoginModal } from "./components/Shared";
 import { Dashboard } from "./components/Dashboard";
 import { EmployeesTab } from "./components/EmployeesTab";
 import { BooksTab } from "./components/BooksTab";
@@ -34,6 +34,7 @@ export default function App() {
   const [navOpen, setNavOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [returnModal, setReturnModal] = useState<any>(null);
+  const [loginOpen, setLoginOpen] = useState(false);
   
   // Auth state
   const [user, setUser] = useState<any>(null);
@@ -57,37 +58,32 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      setAuthLoading(false);
-    });
-    return unsub;
-  }, []);
+  const handleLogin = (u: string, p: string) => {
+    if (p === 'Grancont123') {
+      localStorage.setItem("adminUser", u);
+      setUser({ email: u, displayName: u });
+      setIsAdmin(true);
+      notify("Login realizado com sucesso!");
+      return true;
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminUser");
+    setUser(null);
+    setIsAdmin(false);
+    notify("Sessão encerrada.");
+  };
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
-      if (user.email === 'rjuniiior40@gmail.com') {
-        setIsAdmin(true);
-        return;
-      }
-      try {
-        const adminDoc = await getDoc(doc(db, 'admins', user.email || user.uid));
-        if (adminDoc.exists()) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(employees.some(e => e.email === user.email && e.role === 'admin'));
-        }
-      } catch (e) {
-        setIsAdmin(false);
-      }
-    };
-    checkAdmin();
-  }, [user, employees]);
+    const savedUser = localStorage.getItem("adminUser");
+    if (savedUser) {
+      setUser({ email: savedUser, displayName: savedUser });
+      setIsAdmin(true);
+    }
+    setAuthLoading(false);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -117,20 +113,6 @@ export default function App() {
 
     return () => { unsubSettings(); unsubEmployees(); unsubBooks(); unsubLoans(); unsubSuggestions(); };
   }, [triggerNotifications]);
-
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
-      notify("Login realizado com sucesso!");
-    } catch (e: any) {
-      notify(e.message || "Erro ao fazer login.", "error");
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    notify("Sessão encerrada.");
-  };
 
   const upsertDoc = async (col: string, item: any, successMsg: string) => {
     try {
@@ -326,7 +308,7 @@ export default function App() {
               </>
             ) : (
               <div className="w-full">
-                <button onClick={handleLogin} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-white/80 hover:bg-white/15 transition-colors">
+                <button onClick={() => setLoginOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-white/80 hover:bg-white/15 transition-colors">
                   <ShieldAlert size={18} /> Acesso Admin
                 </button>
                 <div className="mt-4 px-3 py-2">
@@ -385,6 +367,7 @@ export default function App() {
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} settings={settings} onSave={saveSettings} />
       <ReturnModal open={!!returnModal} loan={returnModal} onClose={() => setReturnModal(null)} onConfirm={(l: any, c: string) => { markReturned(l, c); setReturnModal(null); }} />
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={handleLogin} />
       <Toast toast={toast} />
     </div>
   );
