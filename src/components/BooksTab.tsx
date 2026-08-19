@@ -90,16 +90,24 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
             return (
               <div key={b.id} className="bg-white rounded-2xl border p-4 flex flex-col hover:shadow-md transition-shadow" style={{ borderColor: COLORS.BORDER }}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#F1E9F5" }}>
-                      <BookOpen size={16} style={{ color: COLORS.PURPLE }} />
-                    </div>
-                    {avail < (b.totalCopies || 1) && (
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-red-50 text-red-600 border border-red-100" title="Existem exemplares emprestados deste título">
-                        <AlertCircle size={12} />
-                        Emprestado
+                  <div className="flex items-center gap-3">
+                    {b.coverUrl ? (
+                      <div className="w-12 h-16 rounded-md overflow-hidden shrink-0 shadow-sm bg-gray-100 border" style={{ borderColor: COLORS.BORDER }}>
+                        <img src={b.coverUrl} alt={b.title} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#F1E9F5" }}>
+                        <BookOpen size={18} style={{ color: COLORS.PURPLE }} />
                       </div>
                     )}
+                    <div className="flex flex-col items-start">
+                      {avail < (b.totalCopies || 1) && (
+                        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-red-50 text-red-600 border border-red-100 mb-1" title="Existem exemplares emprestados deste título">
+                          <AlertCircle size={10} />
+                          Emprestado
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {isAdmin && (
                     <div className="flex gap-1">
@@ -108,8 +116,15 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
                     </div>
                   )}
                 </div>
-                <p className="font-semibold mt-3 leading-snug" style={{ color: COLORS.INK }}>{b.title}</p>
-                <p className="text-xs mt-1" style={{ color: COLORS.MUTED }}>{b.author || "Autor não informado"}</p>
+                <div className="mt-3 flex-1">
+                  <p className="font-semibold leading-snug" style={{ color: COLORS.INK }}>{b.title}</p>
+                  <p className="text-xs mt-0.5" style={{ color: COLORS.MUTED }}>{b.author || "Autor não informado"}</p>
+                  {b.description && (
+                    <p className="text-xs mt-2 line-clamp-2 text-slate-500 leading-relaxed" title={b.description}>
+                      {b.description}
+                    </p>
+                  )}
+                </div>
                 <div className="flex items-center justify-between mt-4 pt-3 border-t" style={{ borderColor: COLORS.BORDER }}>
                   {bCat ? (
                     <span className="text-xs font-medium rounded-full px-2.5 py-1 truncate max-w-[120px]" style={tagStyle(bCat)}>{bCat}</span>
@@ -134,16 +149,26 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
 }
 
 function BookForm({ initial, onSave, onCancel }: any) {
-  const [form, setForm] = useState({ title: "", author: "", category: initial?.category || initial?.area || "", totalCopies: 1, ...initial });
+  const [form, setForm] = useState({ title: "", author: "", category: initial?.category || initial?.area || "", totalCopies: 1, description: "", coverUrl: "", ...initial });
   return (
     <div className="space-y-4">
       <div>
         <FieldLabel>Título *</FieldLabel>
         <input className={inputClass} style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex.: Pai Rico, Pai Pobre" />
       </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <FieldLabel>Autor</FieldLabel>
+          <input className={inputClass} style={inputStyle} value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} placeholder="Ex.: Robert Kiyosaki" />
+        </div>
+        <div>
+          <FieldLabel>Link da Imagem de Capa (URL)</FieldLabel>
+          <input className={inputClass} style={inputStyle} value={form.coverUrl} onChange={(e) => setForm({ ...form, coverUrl: e.target.value })} placeholder="https://..." type="url" />
+        </div>
+      </div>
       <div>
-        <FieldLabel>Autor</FieldLabel>
-        <input className={inputClass} style={inputStyle} value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} placeholder="Ex.: Robert Kiyosaki" />
+        <FieldLabel>Descrição / Sinopse</FieldLabel>
+        <textarea className={inputClass} style={{ ...inputStyle, minHeight: '80px', resize: 'none' }} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Breve resumo sobre o livro..." />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

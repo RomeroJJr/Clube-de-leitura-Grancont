@@ -30,7 +30,8 @@ export function Dashboard({ employees, books, loans, suggestions, onGoTo, notify
     .slice(0, 5);
 
   const topBooks = Object.entries(bookCounts)
-    .map(([id, count]) => ({ title: bookById[id]?.title || "Desconhecido", count }))
+    .map(([id, count]) => ({ book: bookById[id], count }))
+    .filter(r => r.book)
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
@@ -218,23 +219,31 @@ export function Dashboard({ employees, books, loans, suggestions, onGoTo, notify
               <p className="text-sm font-medium" style={{ color: COLORS.MUTED }}>Ainda não há dados suficientes para exibir o gráfico.</p>
             </div>
           ) : (
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topBooks} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="title" type="category" width={180} tick={{ fontSize: 13, fill: COLORS.INK, fontWeight: 500 }} axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    cursor={{ fill: '#F1F5F9' }} 
-                    contentStyle={{ borderRadius: '12px', border: `1px solid ${COLORS.BORDER}`, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    itemStyle={{ color: COLORS.PURPLE, fontWeight: 'bold' }}
-                  />
-                  <Bar dataKey="count" fill={COLORS.PURPLE} radius={[0, 6, 6, 0]} barSize={32}>
-                    {topBooks.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? COLORS.PURPLE : '#A5B4FC'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="flex flex-col gap-4 mt-2">
+              {topBooks.map((r, i) => (
+                <div key={r.book.id} className="flex items-center gap-3">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-sm"
+                    style={{ backgroundColor: i === 0 ? "#FEF3C7" : "#F1F5F9", color: i === 0 ? "#D97706" : "#64748B" }}
+                  >
+                    {i + 1}
+                  </span>
+                  {r.book.coverUrl ? (
+                    <div className="w-10 h-14 rounded overflow-hidden shrink-0 shadow-sm border border-black/10">
+                      <img src={r.book.coverUrl} alt={r.book.title} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-14 rounded flex items-center justify-center shrink-0 shadow-sm border border-black/10 bg-gray-50">
+                      <BookOpen size={16} style={{ color: COLORS.MUTED }} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: COLORS.INK }}>{r.book.title}</p>
+                    <p className="text-[11px] truncate text-slate-500 mt-0.5">{r.book.author || "Autor desconhecido"}</p>
+                  </div>
+                  <span className="text-xs font-bold px-2 py-1 bg-indigo-50 rounded-md shrink-0" style={{ color: COLORS.PURPLE }}>{r.count} emp.</span>
+                </div>
+              ))}
             </div>
           )}
         </div>

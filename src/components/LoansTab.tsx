@@ -109,19 +109,32 @@ export function LoansTab({ employees, books, loans, upsert, remove, extendLoan, 
               {filtered.map((l: any) => {
                 const status = getLoanStatus(l) as LoanStatus;
                 return (
-                  <tr key={l.id} className="border-t align-top" style={{ borderColor: COLORS.BORDER }}>
+                  <tr key={l.id} className="border-t align-top hover:bg-gray-50/50 transition-colors" style={{ borderColor: COLORS.BORDER }}>
                     <td className="px-5 py-3 font-medium" style={{ color: COLORS.INK }}>
-                      {bookById[l.bookId]?.title || "Título removido"}
-                      <div className="text-xs mt-0.5 sm:hidden" style={{ color: COLORS.MUTED }}>{empById[l.employeeId]?.name || "Colaborador removido"}</div>
+                      <div className="flex items-center gap-3">
+                        {bookById[l.bookId]?.coverUrl ? (
+                          <div className="w-8 h-12 rounded overflow-hidden shrink-0 shadow-sm border border-black/10">
+                            <img src={bookById[l.bookId].coverUrl} alt="Capa" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-12 rounded flex items-center justify-center shrink-0 shadow-sm border border-black/10 bg-gray-50">
+                            <BookOpen size={14} style={{ color: COLORS.MUTED }} />
+                          </div>
+                        )}
+                        <div>
+                          {bookById[l.bookId]?.title || "Título removido"}
+                          <div className="text-xs mt-0.5 sm:hidden" style={{ color: COLORS.MUTED }}>{empById[l.employeeId]?.name || "Colaborador removido"}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-5 py-3 hidden sm:table-cell" style={{ color: "#6B6478" }}>{empById[l.employeeId]?.name || "—"}</td>
-                    <td className="px-5 py-3 hidden md:table-cell" style={{ color: "#6B6478" }}>{fmtDate(l.checkoutDate)}</td>
-                    <td className="px-5 py-3 hidden md:table-cell" style={{ color: "#6B6478" }}>
+                    <td className="px-5 py-3 hidden sm:table-cell align-middle" style={{ color: "#6B6478" }}>{empById[l.employeeId]?.name || "—"}</td>
+                    <td className="px-5 py-3 hidden md:table-cell align-middle" style={{ color: "#6B6478" }}>{fmtDate(l.checkoutDate)}</td>
+                    <td className="px-5 py-3 hidden md:table-cell align-middle" style={{ color: "#6B6478" }}>
                       {l.actualReturnDate ? <span>devolvido em {fmtDate(l.actualReturnDate)}</span> : fmtDate(l.expectedReturnDate)}
                     </td>
-                    <td className="px-5 py-3"><Badge status={status} /></td>
+                    <td className="px-5 py-3 align-middle"><Badge status={status} /></td>
                     {isAdmin && (
-                      <td className="px-5 py-3">
+                      <td className="px-5 py-3 align-middle">
                         <div className="flex justify-end gap-1">
                           {!l.actualReturnDate && (
                             <>
