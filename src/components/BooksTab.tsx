@@ -284,6 +284,29 @@ function BookForm({ initial, onSave, onCancel }: any) {
     }
   };
 
+  const generateCoverWithAI = async () => {
+    if (!form.title) return alert("Preencha o título primeiro!");
+    setUploading(true);
+    try {
+      const res = await fetch("/api/generate-cover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: form.title, author: form.author })
+      });
+      const data = await res.json();
+      if (data.coverUrl) {
+        setForm(prev => ({ ...prev, coverUrl: data.coverUrl }));
+      } else {
+        alert("Não foi possível encontrar uma capa com a IA.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao buscar capa.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -304,33 +327,41 @@ function BookForm({ initial, onSave, onCancel }: any) {
             className="hidden" 
             onChange={handleFileChange} 
           />
-          <div className="flex items-center gap-2 mt-1">
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-dashed border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 text-sm font-medium text-slate-600 transition-colors w-full"
-            >
-              {uploading ? (
-                <div className="w-4 h-4 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
-              ) : (
-                <><Upload size={16} /> Anexar imagem</>
-              )}
-            </button>
-            {form.coverUrl && (
+          <div className="flex flex-col gap-2 mt-1">
+            <div className="flex gap-2">
               <button 
-                onClick={() => setForm(prev => ({ ...prev, coverUrl: "" }))}
-                className="w-10 h-10 flex items-center justify-center rounded-lg border border-red-100 bg-red-50 text-red-600 hover:bg-red-100 shrink-0"
-                title="Remover capa"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="flex flex-1 items-center justify-center gap-2 h-10 px-4 rounded-lg border border-dashed border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 text-sm font-medium text-slate-600 transition-colors"
               >
-                <X size={16} />
+                {uploading ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin" />
+                ) : (
+                  <><Upload size={16} /> Anexar</>
+                )}
               </button>
+              <button 
+                onClick={generateCoverWithAI}
+                disabled={uploading || !form.title}
+                className="flex flex-1 items-center justify-center gap-2 h-10 px-4 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-sm font-medium text-indigo-700 transition-colors"
+                title="Gerar capa com IA"
+              >
+                Gerar c/ IA
+              </button>
+            </div>
+            {form.coverUrl && (
+              <div className="flex justify-between items-center bg-gray-50 border border-gray-200 p-2 rounded-lg mt-1">
+                <span className="text-xs font-semibold text-emerald-600 truncate">✓ Imagem carregada</span>
+                <button 
+                  onClick={() => setForm(prev => ({ ...prev, coverUrl: "" }))}
+                  className="w-6 h-6 flex items-center justify-center rounded border border-red-100 bg-white text-red-600 hover:bg-red-50 shrink-0"
+                  title="Remover capa"
+                >
+                  <X size={14} />
+                </button>
+              </div>
             )}
           </div>
-          {form.coverUrl && !uploading && (
-            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
-              ✓ Imagem anexada com sucesso
-            </div>
-          )}
         </div>
       </div>
       <div>

@@ -121,11 +121,11 @@ export function SuggestionsTab({ suggestions, employees, upsert, remove, notify,
       )}
 
       <Modal open={!!modal} title="Nova Sugestão de Livro" onClose={() => setModal(null)}>
-        {modal && <SuggestionForm initial={modal} employees={employees} onSave={save} onCancel={() => setModal(null)} />}
+        {modal && <SuggestionForm initial={modal} employees={employees} onSave={save} onCancel={() => setModal(null)} currentUser={currentUser} />}
       </Modal>
 
       <Modal open={!!voterModal} title="Confirmar Voto" onClose={() => setVoterModal(null)}>
-        {voterModal && <VoteForm suggestion={voterModal} employees={employees} onVote={(empId: string) => toggleVote(voterModal, empId)} onCancel={() => setVoterModal(null)} />}
+        {voterModal && <VoteForm suggestion={voterModal} employees={employees} onVote={(empId: string) => toggleVote(voterModal, empId)} onCancel={() => setVoterModal(null)} currentUser={currentUser} />}
       </Modal>
 
       <ConfirmDialog open={!!confirmId} title="Excluir sugestão?" message="Essa ação não pode ser desfeita e os votos serão perdidos." onConfirm={() => { remove(confirmId!); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />
@@ -133,8 +133,11 @@ export function SuggestionsTab({ suggestions, employees, upsert, remove, notify,
   );
 }
 
-function SuggestionForm({ initial, employees, onSave, onCancel }: any) {
-  const [form, setForm] = useState({ title: "", author: "", suggesterId: "", ...initial });
+function SuggestionForm({ initial, employees, onSave, onCancel, currentUser }: any) {
+  const isEmployee = currentUser?.type === 'user';
+  const defaultSuggesterId = isEmployee ? currentUser.id : "";
+  const [form, setForm] = useState({ title: "", author: "", suggesterId: defaultSuggesterId, ...initial });
+
   return (
     <div className="space-y-4">
       <div>
@@ -147,37 +150,57 @@ function SuggestionForm({ initial, employees, onSave, onCancel }: any) {
       </div>
       <div>
         <FieldLabel>Quem está sugerindo? *</FieldLabel>
-        <select className={inputClass} style={inputStyle} value={form.suggesterId} onChange={(e) => setForm({ ...form, suggesterId: e.target.value })}>
-          <option value="">Selecione seu nome...</option>
-          {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
-        </select>
+        {isEmployee ? (
+          <div className="p-3 bg-gray-50 border rounded-lg text-sm font-medium" style={{ borderColor: COLORS.BORDER, color: COLORS.INK }}>
+            Sugerindo como: {currentUser.name}
+          </div>
+        ) : (
+          <select className={inputClass} style={inputStyle} value={form.suggesterId} onChange={(e) => setForm({ ...form, suggesterId: e.target.value })}>
+            <option value="">Selecione seu nome...</option>
+            {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        )}
       </div>
       <div className="flex justify-end gap-2 pt-2">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">Cancelar</button>
-        <button onClick={() => onSave(form)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700">Sugerir</button>
+        <button onClick={() => onSave(form)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors" style={{ backgroundColor: COLORS.PURPLE }}>Sugerir</button>
       </div>
     </div>
   );
 }
 
-function VoteForm({ suggestion, employees, onVote, onCancel }: any) {
-  const [empId, setEmpId] = useState("");
+function VoteForm({ suggestion, employees, onVote, onCancel, currentUser }: any) {
+  const isEmployee = currentUser?.type === 'user';
+  const defaultEmpId = isEmployee ? currentUser.id : "";
+  const [empId, setEmpId] = useState(defaultEmpId);
+
+  const hasVoted = isEmployee ? suggestion.voters?.includes(currentUser.id) : false;
+
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-500 mb-2">Selecione seu nome para contabilizar seu voto para o livro <b>"{suggestion.title}"</b>.</p>
-      <div>
-        <FieldLabel>Quem está votando?</FieldLabel>
-        <select className={inputClass} style={inputStyle} value={empId} onChange={(e) => setEmpId(e.target.value)}>
-          <option value="">Selecione seu nome...</option>
-          {employees.map((e: any) => {
-            const hasVoted = suggestion.voters?.includes(e.id);
-            return <option key={e.id} value={e.id}>{e.name} {hasVoted ? "(Remover voto)" : ""}</option>;
-          })}
-        </select>
-      </div>
+      <p className="text-sm text-slate-500 mb-2">
+        {isEmployee 
+          ? `Você está prestes a ${hasVoted ? 'remover seu voto' : 'votar'} no livro "${suggestion.title}".`
+          : `Selecione seu nome para contabilizar seu voto para o livro "${suggestion.title}".`
+        }
+      </p>
+      
+      {!isEmployee && (
+        <div>
+          <FieldLabel>Quem está votando?</FieldLabel>
+          <select className={inputClass} style={inputStyle} value={empId} onChange={(e) => setEmpId(e.target.value)}>
+            <option value="">Selecione o nome...</option>
+            {employees.map((e: any) => {
+              const voted = suggestion.voters?.includes(e.id);
+              return <option key={e.id} value={e.id}>{e.name} {voted ? "(Remover voto)" : ""}</option>;
+            })}
+          </select>
+        </div>
+      )}
+      
       <div className="flex justify-end gap-2 pt-2">
         <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">Cancelar</button>
-        <button onClick={() => onVote(empId)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700">Confirmar</button>
+        <button onClick={() => onVote(empId)} className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors" style={{ backgroundColor: COLORS.PURPLE }}>Confirmar</button>
       </div>
     </div>
   );

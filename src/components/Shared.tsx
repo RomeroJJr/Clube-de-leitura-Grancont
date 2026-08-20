@@ -143,24 +143,28 @@ export function LoginModal({ open, onClose, onLogin }: any) {
 
   if (!open) return null;
 
-  const handleConfirm = () => {
-    if (onLogin(user, pass)) {
+  const handleConfirm = async () => {
+    const success = await onLogin(user, pass);
+    if (success) {
       setUser("");
       setPass("");
       setError("");
       onClose();
     } else {
-      setError("Usuário ou senha incorretos.");
+      setError("Usuário não encontrado ou senha incorreta.");
     }
   };
 
   return (
     <Modal open={open} title="Acesso Restrito" onClose={onClose}>
       <div className="space-y-4">
+        <p className="text-sm mb-4" style={{ color: COLORS.MUTED }}>
+          Colaboradores: digite seu nome exato e escolha uma senha no seu primeiro acesso.
+        </p>
         {error && <div className="text-red-600 text-sm font-semibold mb-2 bg-red-50 p-2 rounded-lg">{error}</div>}
         <div>
-          <FieldLabel>Usuário</FieldLabel>
-          <input className={inputClass} style={inputStyle} value={user} onChange={(e) => setUser(e.target.value)} placeholder="E-mail ou Nome" />
+          <FieldLabel>Nome do Colaborador (ou admin)</FieldLabel>
+          <input className={inputClass} style={inputStyle} value={user} onChange={(e) => setUser(e.target.value)} placeholder="Seu nome" />
         </div>
         <div>
           <FieldLabel>Senha</FieldLabel>

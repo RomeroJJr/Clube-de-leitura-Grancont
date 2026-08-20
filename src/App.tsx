@@ -64,28 +64,58 @@ export default function App() {
     }
   }, []);
 
-  const handleLogin = (u: string, p: string) => {
-    if (p === 'Grancont123') {
-      localStorage.setItem("adminUser", u);
-      setUser({ email: u, displayName: u });
+  const handleLogin = async (u: string, p: string) => {
+    if (u.toLowerCase() === 'admin' && p === 'Grancont123') {
+      const adminData = { type: 'admin', name: 'Admin' };
+      localStorage.setItem("authUser", JSON.stringify(adminData));
+      setUser(adminData);
       setIsAdmin(true);
-      notify("Login realizado com sucesso!");
+      notify("Login admin realizado com sucesso!");
       return true;
+    }
+
+    const emp = employees.find((e: any) => e.name.toLowerCase() === u.trim().toLowerCase());
+    if (emp) {
+      if (!emp.password) {
+        await upsertDoc('employees', { ...emp, password: p }, "Senha cadastrada com sucesso!");
+        const userData = { type: 'user', id: emp.id, name: emp.name };
+        localStorage.setItem("authUser", JSON.stringify(userData));
+        setUser(userData);
+        setIsAdmin(false);
+        return true;
+      } else {
+        if (emp.password === p) {
+          const userData = { type: 'user', id: emp.id, name: emp.name };
+          localStorage.setItem("authUser", JSON.stringify(userData));
+          setUser(userData);
+          setIsAdmin(false);
+          notify("Login realizado com sucesso!");
+          return true;
+        } else {
+          return false;
+        }
+      }
     }
     return false;
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminUser");
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("adminUser"); // cleanup legacy
     setUser(null);
     setIsAdmin(false);
     notify("Sessão encerrada.");
   };
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("adminUser");
-    if (savedUser) {
-      setUser({ email: savedUser, displayName: savedUser });
+    const savedLegacy = localStorage.getItem("adminUser");
+    const saved = localStorage.getItem("authUser");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setUser(parsed);
+      setIsAdmin(parsed.type === 'admin');
+    } else if (savedLegacy) {
+      setUser({ type: 'admin', name: 'Admin' });
       setIsAdmin(true);
     }
     setAuthLoading(false);
@@ -390,6 +420,7 @@ export default function App() {
                 remove={removeSuggestion}
                 notify={notify}
                 isAdmin={isAdmin}
+                currentUser={user}
               />
             )}
             {tab === "acquisitions" && (
