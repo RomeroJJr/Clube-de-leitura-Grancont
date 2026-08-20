@@ -129,67 +129,45 @@ export function EmployeesTab({ employees, books, loans, upsert, remove, extendLo
               </div>
               
               <div className="space-y-6">
-                {/* Active Loans Section */}
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: COLORS.PURPLE }}>
-                    <span className="w-2 h-2 rounded-full bg-current"></span>
-                    Empréstimos Atuais ({active.length})
+                  <p className="text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: COLORS.INK }}>
+                    Histórico de Atividade
                   </p>
-                  {active.length === 0 ? (
-                    <p className="text-sm text-center py-4 bg-gray-50 rounded-xl" style={{ color: COLORS.MUTED }}>Nenhum empréstimo ativo no momento.</p>
+                  {empLoans(profile.id).length === 0 ? (
+                    <p className="text-sm text-center py-6 bg-gray-50 rounded-xl" style={{ color: COLORS.MUTED }}>Ainda não há histórico de empréstimos.</p>
                   ) : (
-                    <div className="space-y-2">
-                      {active.map((l: any) => {
+                    <div className="relative pl-4 space-y-6 before:absolute before:inset-y-0 before:left-[7px] before:w-px before:bg-gray-200">
+                      {empLoans(profile.id).map((l: any) => {
                         const status = getLoanStatus(l) as LoanStatus;
                         const book = bookById[l.bookId];
+                        const isActive = !l.actualReturnDate;
+                        
                         return (
-                          <div key={l.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl px-4 py-3 border border-transparent hover:border-gray-200 transition-colors" style={{ backgroundColor: "#FAF7FB" }}>
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold truncate" style={{ color: COLORS.INK }}>{book?.title || "Título removido"}</p>
-                              <p className="text-xs mt-1" style={{ color: COLORS.MUTED }}>
-                                Coletado em {fmtDate(l.checkoutDate)}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3 shrink-0">
-                              <Badge status={status} />
-                              {isAdmin && (
-                                <div className="flex gap-1 border-l pl-3 ml-1" style={{ borderColor: COLORS.BORDER_STRONG }}>
-                                  <IconBtn title="Renovar por mais 7 dias" onClick={() => extendLoan(l, 7)}><RotateCw size={14} /></IconBtn>
-                                  <IconBtn title="Marcar como devolvido" onClick={() => onReturnRequest(l)}><CheckCircle2 size={14} /></IconBtn>
+                          <div key={l.id} className="relative">
+                            <span className={`absolute -left-[21px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white ${isActive ? 'bg-indigo-500' : 'bg-gray-300'}`}></span>
+                            <div className={`rounded-xl px-4 py-3 border ${isActive ? 'border-indigo-100 bg-indigo-50/30' : 'border-gray-200 bg-white'}`}>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold truncate" style={{ color: COLORS.INK }}>{book?.title || "Título removido"}</p>
+                                  <p className="text-xs mt-1" style={{ color: COLORS.MUTED }}>
+                                    Retirado em {fmtDate(l.checkoutDate)}
+                                    {l.actualReturnDate ? ` • Devolvido em ${fmtDate(l.actualReturnDate)}` : ` • Previsão para ${fmtDate(l.expectedReturnDate)}`}
+                                  </p>
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Past Loans Section */}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: COLORS.MUTED }}>
-                    <span className="w-2 h-2 rounded-full bg-current"></span>
-                    Histórico de Devoluções ({past.length})
-                  </p>
-                  {past.length === 0 ? (
-                    <p className="text-sm text-center py-4 bg-gray-50 rounded-xl" style={{ color: COLORS.MUTED }}>Ainda não há devoluções registradas.</p>
-                  ) : (
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                      {past.map((l: any) => {
-                        const book = bookById[l.bookId];
-                        return (
-                          <div key={l.id} className="flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 bg-white border" style={{ borderColor: COLORS.BORDER }}>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate" style={{ color: COLORS.INK }}>{book?.title || "Título removido"}</p>
-                              <p className="text-xs mt-0.5" style={{ color: COLORS.MUTED }}>
-                                {fmtDate(l.checkoutDate)} até {fmtDate(l.actualReturnDate)}
-                              </p>
-                            </div>
-                            <div className="shrink-0">
-                              <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-100" style={{ color: "#6B6478" }}>
-                                Devolvido
-                              </span>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  {isActive ? <Badge status={status} /> : (
+                                    <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-100 text-slate-500">
+                                      Devolvido
+                                    </span>
+                                  )}
+                                  {isActive && isAdmin && (
+                                    <div className="flex gap-1 border-l pl-3 ml-1" style={{ borderColor: COLORS.BORDER_STRONG }}>
+                                      <IconBtn title="Renovar por mais 7 dias" onClick={() => extendLoan(l, 7)}><RotateCw size={14} /></IconBtn>
+                                      <IconBtn title="Marcar como devolvido" onClick={() => onReturnRequest(l)}><CheckCircle2 size={14} /></IconBtn>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         );

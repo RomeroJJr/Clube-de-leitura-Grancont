@@ -4,7 +4,7 @@ import { onSnapshot, collection, doc, setDoc, deleteDoc, getDoc } from 'firebase
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
 
-import { Bell, Users, BookOpen, ArrowRightLeft, Settings, ShieldAlert, LogOut, Lightbulb } from "lucide-react";
+import { Bell, Users, BookOpen, ArrowRightLeft, Settings, ShieldAlert, LogOut, Lightbulb, Bookmark } from "lucide-react";
 import { todayISO, addDays, daysUntil, COLORS } from "./lib/utils";
 import { Logomark, Toast, ReturnModal, LoginModal } from "./components/Shared";
 import { Dashboard } from "./components/Dashboard";
@@ -12,6 +12,7 @@ import { EmployeesTab } from "./components/EmployeesTab";
 import { BooksTab } from "./components/BooksTab";
 import { LoansTab } from "./components/LoansTab";
 import { SuggestionsTab } from "./components/SuggestionsTab";
+import { ReservationsTab } from "./components/ReservationsTab";
 import { SettingsModal } from "./components/SettingsModal";
 
 const NAV = [
@@ -19,6 +20,7 @@ const NAV = [
   { key: "employees", label: "Colaboradores", icon: Users },
   { key: "books", label: "Acervo", icon: BookOpen },
   { key: "loans", label: "Empréstimos", icon: ArrowRightLeft },
+  { key: "reservations", label: "Reservas", icon: Bookmark },
   { key: "suggestions", label: "Sugestões", icon: Lightbulb },
 ];
 
@@ -28,6 +30,7 @@ export default function App() {
   const [books, setBooks] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [settings, setSettings] = useState({ defaultLoanDays: 21 });
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
@@ -108,10 +111,14 @@ export default function App() {
 
     const unsubSuggestions = onSnapshot(collection(db, 'suggestions'), (snap) => {
       setSuggestions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      setLoading(false);
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'suggestions'));
 
-    return () => { unsubSettings(); unsubEmployees(); unsubBooks(); unsubLoans(); unsubSuggestions(); };
+    const unsubReservations = onSnapshot(collection(db, 'reservations'), (snap) => {
+      setReservations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'reservations'));
+
+    return () => { unsubSettings(); unsubEmployees(); unsubBooks(); unsubLoans(); unsubSuggestions(); unsubReservations(); };
   }, [triggerNotifications]);
 
   const upsertDoc = async (col: string, item: any, successMsg: string) => {
@@ -190,6 +197,9 @@ export default function App() {
   const upsertSuggestion = (item: any) => upsertDoc('suggestions', item, "Sugestão registrada.");
   const removeSuggestion = (id: string) => deleteDocItem('suggestions', id, "Sugestão removida.");
 
+  const upsertReservation = (item: any) => upsertDoc('reservations', item, "Reserva salva.");
+  const removeReservation = (id: string) => deleteDocItem('reservations', id, "Reserva cancelada.");
+
   const saveSettings = async (s: any) => {
     try {
       await setDoc(doc(db, 'settings', 'global'), s);
@@ -224,30 +234,31 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background: #E4DAEC; border-radius: 8px; }
       `}</style>
 
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3" style={{ backgroundColor: COLORS.PURPLE }}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-[#0F172A]">
         <div className="flex items-center gap-2">
           <Logomark size={26} />
           <span className="text-white font-bold brand-font">grancont</span>
         </div>
-        <button onClick={() => setNavOpen((v) => !v)} className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>Menu</button>
+        <button onClick={() => setNavOpen((v) => !v)} className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg bg-white/10">Menu</button>
       </div>
 
       <aside
-        className={`fixed md:static z-30 top-0 left-0 h-full w-64 flex-col px-5 py-6 transition-transform duration-200 ${navOpen ? "flex translate-x-0" : "hidden md:flex"} shadow-2xl md:shadow-none border-r border-white/10`}
-        style={{ background: `linear-gradient(180deg, ${COLORS.PURPLE} 0%, ${COLORS.PURPLE_DARK} 100%)` }}
+        className={`fixed md:static z-30 top-0 left-0 h-full w-64 flex-col px-5 py-6 transition-transform duration-200 ${navOpen ? "flex translate-x-0" : "hidden md:flex"} shadow-2xl md:shadow-none border-r border-white/5 bg-[#0A0F1C]`}
       >
         <div className="flex items-center gap-3 mb-1">
           <div className="relative shadow-lg rounded-2xl overflow-hidden shrink-0 group cursor-pointer">
-            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <Logomark size={38} />
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="p-1.5 bg-indigo-600 rounded-xl">
+              <Logomark size={32} />
+            </div>
           </div>
           <div>
             <p className="text-white font-extrabold text-xl leading-none brand-font tracking-tight drop-shadow-sm">grancont</p>
-            <p className="text-white/60 text-[10px] tracking-[0.2em] uppercase mt-1">soluções</p>
+            <p className="text-indigo-300 text-[10px] tracking-[0.2em] uppercase mt-1 font-bold">soluções</p>
           </div>
         </div>
-        <div className="h-px w-full bg-white/10 my-5"></div>
-        <p className="text-white/50 text-[11px] mb-3 px-2 font-bold uppercase tracking-wider">Clube de Leitura</p>
+        <div className="h-px w-full bg-white/5 my-6"></div>
+        <p className="text-slate-500 text-[10px] mb-3 px-2 font-bold uppercase tracking-widest">Clube de Leitura</p>
         <nav className="flex flex-col gap-1.5">
           {NAV.map((n) => {
             const active = tab === n.key;
@@ -255,24 +266,21 @@ export default function App() {
               <button
                 key={n.key}
                 onClick={() => { setTab(n.key); setNavOpen(false); }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group overflow-hidden"
-                style={{ 
-                  color: active ? COLORS.PURPLE_DARK : "rgba(255,255,255,0.75)", 
-                }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group overflow-hidden ${active ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
               >
                 {active && (
                   <motion.div 
                     layoutId="activeTabIndicator"
-                    className="absolute inset-0 bg-white rounded-xl shadow-sm"
+                    className="absolute inset-0 bg-white/10 rounded-xl"
                     initial={false}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
-                <div className={`absolute inset-0 rounded-xl bg-white/10 opacity-0 transition-opacity ${!active && "group-hover:opacity-100"}`}></div>
-                <n.icon size={18} className={`relative z-10 transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`} />
+                <div className={`absolute inset-0 rounded-xl bg-white/5 opacity-0 transition-opacity ${!active && "group-hover:opacity-100"}`}></div>
+                <n.icon size={18} className={`relative z-10 transition-transform duration-300 ${active ? "scale-110 text-indigo-400" : "group-hover:scale-110 text-slate-500"}`} />
                 <span className="relative z-10">{n.label}</span>
                 {n.key === "loans" && overdueCount > 0 && (
-                  <span className="ml-auto relative z-10 text-[10px] font-bold rounded-full px-2 py-0.5 shadow-sm" style={{ backgroundColor: active ? "#FBEAEA" : "#C63C3C", color: active ? "#C63C3C" : "white" }}>
+                  <span className="ml-auto relative z-10 text-[10px] font-bold rounded-full px-2 py-0.5 shadow-sm bg-red-500 text-white">
                     {overdueCount}
                   </span>
                 )}
@@ -280,40 +288,40 @@ export default function App() {
             );
           })}
         </nav>
-        <div className="mt-auto pt-4 border-t space-y-1" style={{ borderColor: "rgba(255,255,255,0.15)" }}>
+        <div className="mt-auto pt-6 space-y-1">
           {isAdmin && (
-            <button onClick={() => setSettingsOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-white/80 hover:bg-white/15 transition-colors mb-2">
-              <Settings size={18} /> Configurações
+            <button onClick={() => setSettingsOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all mb-2">
+              <Settings size={18} className="text-slate-500" /> Configurações
             </button>
           )}
-          <div className="flex items-center justify-between gap-3 px-2 py-2 w-full">
+          <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
             {user ? (
-              <>
+              <div className="flex items-center justify-between gap-3 w-full">
                 <div className="flex items-center gap-3 min-w-0">
                   {user?.photoURL ? (
-                    <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full shrink-0" />
+                    <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full shrink-0 border border-white/10" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
                       {user?.email?.substring(0, 2).toUpperCase() || 'U'}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-white text-xs font-semibold truncate">{user?.displayName || user?.email?.split('@')[0]}</p>
-                    <p className="text-white/50 text-[10px] truncate">{isAdmin ? "Administrador" : "Leitor"}</p>
+                    <p className="text-white text-xs font-bold truncate">{user?.displayName || user?.email?.split('@')[0]}</p>
+                    <p className="text-slate-400 text-[10px] truncate mt-0.5">{isAdmin ? "Admin" : "Leitor"}</p>
                   </div>
                 </div>
-                <button onClick={handleLogout} title="Sair" className="text-white/50 hover:text-white transition-colors">
+                <button onClick={handleLogout} title="Sair" className="text-slate-400 hover:text-white transition-colors shrink-0">
                   <LogOut size={16} />
                 </button>
-              </>
+              </div>
             ) : (
               <div className="w-full">
-                <button onClick={() => setLoginOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-white/80 hover:bg-white/15 transition-colors">
-                  <ShieldAlert size={18} /> Acesso Admin
+                <button onClick={() => setLoginOpen(true)} className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold w-full bg-indigo-600 text-white hover:bg-indigo-500 transition-colors">
+                  <ShieldAlert size={16} /> Acesso Admin
                 </button>
-                <div className="mt-4 px-3 py-2">
-                  <p className="text-white/70 text-xs font-semibold">Modo Leitura</p>
-                  <p className="text-white/40 text-[10px] mt-0.5">Apenas visualização do acervo</p>
+                <div className="mt-3 text-center">
+                  <p className="text-slate-300 text-xs font-semibold">Modo Leitura</p>
+                  <p className="text-slate-500 text-[10px] mt-0.5">Apenas visualização</p>
                 </div>
               </div>
             )}
@@ -321,7 +329,7 @@ export default function App() {
         </div>
       </aside>
 
-      {navOpen && <div className="fixed inset-0 z-20 md:hidden" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setNavOpen(false)} />}
+      {navOpen && <div className="fixed inset-0 z-20 md:hidden bg-slate-900/60 backdrop-blur-sm" onClick={() => setNavOpen(false)} />}
 
       <main className="flex-1 px-4 py-6 md:px-10 md:py-8 pt-20 md:pt-8 max-w-6xl overflow-y-auto relative">
         <AnimatePresence mode="wait">
@@ -359,6 +367,18 @@ export default function App() {
                 extendLoan={extendLoan}
                 onReturnRequest={setReturnModal}
                 defaultLoanDays={settings.defaultLoanDays}
+                notify={notify}
+                isAdmin={isAdmin}
+              />
+            )}
+            {tab === "reservations" && (
+              <ReservationsTab
+                reservations={reservations}
+                employees={employees}
+                books={books}
+                loans={loans}
+                upsert={upsertReservation}
+                remove={removeReservation}
                 notify={notify}
                 isAdmin={isAdmin}
               />

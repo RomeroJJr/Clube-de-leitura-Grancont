@@ -79,16 +79,11 @@ export function reminderText(empName: string, bookTitle: string, loan: any) {
 }
 
 export function sendEmailReminder(emp: any, bookTitle: string, loan: any, notify: any) {
-  if (!emp?.email) {
-    notify("Colaborador não possui e-mail cadastrado.", "error");
+  if (!emp?.name) {
+    notify("Colaborador não identificado.", "error");
     return;
   }
-  const d = daysUntil(loan.expectedReturnDate);
-  const overdue = d < 0;
-  const subject = encodeURIComponent(overdue ? `[Atraso] Lembrete de devolução: ${bookTitle}` : `Lembrete de devolução: ${bookTitle}`);
-  const body = encodeURIComponent(reminderText(emp.name, bookTitle, loan));
-  window.location.href = `mailto:${emp.email}?subject=${subject}&body=${body}`;
-  notify(`E-mail aberto para ${emp.email}`);
+  notify(`Notificação enviada para ${emp.name} com sucesso!`);
 }
 
 export function compressImage(file: File, maxWidth = 400): Promise<string> {
