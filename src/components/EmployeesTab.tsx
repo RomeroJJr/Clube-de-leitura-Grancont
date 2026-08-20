@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Users, Building2, Pencil, Trash2, RotateCw, CheckCircle2, BookPlus } from 'lucide-react';
-import { uid, downloadCSV, getLoanStatus, fmtDate, COLORS, LoanStatus, todayISO, addDays, availableCopies } from '../lib/utils';
+import { Users, Building2, Pencil, Trash2, RotateCw, CheckCircle2, BookPlus, TrendingUp } from 'lucide-react';
+import { uid, downloadCSV, getLoanStatus, fmtDate, COLORS, LoanStatus, todayISO, addDays, availableCopies, getLast6Months } from '../lib/utils';
 import { TabHeader, ExportBtn, EmptyState, Avatar, IconBtn, Modal, ConfirmDialog, FieldLabel, inputClass, inputStyle, Badge } from './Shared';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export function EmployeesTab({ employees, books, loans, upsert, remove, extendLoan, onReturnRequest, notify, isAdmin, upsertLoan, defaultLoanDays }: any) {
   const [query, setQuery] = useState("");
@@ -128,7 +129,38 @@ export function EmployeesTab({ employees, books, loans, upsert, remove, extendLo
                 )}
               </div>
               
-              <div className="space-y-6">
+              <div className="grid lg:grid-cols-2 gap-8">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: COLORS.INK }}>
+                    Frequência de Leitura (6 Meses)
+                  </p>
+                  <div className="h-[220px] w-full bg-white border rounded-xl p-4 shadow-sm" style={{ borderColor: COLORS.BORDER }}>
+                    {empLoans(profile.id).length === 0 ? (
+                       <div className="h-full flex items-center justify-center text-sm" style={{ color: COLORS.MUTED }}>Sem dados de leitura recentes.</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={getLast6Months().map(m => ({
+                          name: m.label,
+                          "Livros": empLoans(profile.id).filter((l: any) => {
+                            if (!l.checkoutDate) return false;
+                            const d = new Date(l.checkoutDate + "T00:00:00");
+                            return d.getFullYear() === m.year && d.getMonth() === m.month;
+                          }).length
+                        }))} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORS.BORDER} />
+                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: COLORS.MUTED }} dy={8} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: COLORS.MUTED }} allowDecimals={false} />
+                          <Tooltip 
+                            contentStyle={{ borderRadius: '8px', border: `1px solid ${COLORS.BORDER}`, boxShadow: '0 2px 4px rgb(0 0 0 / 0.05)' }}
+                            itemStyle={{ color: COLORS.PURPLE, fontWeight: 'bold' }}
+                          />
+                          <Line type="monotone" dataKey="Livros" stroke={COLORS.PURPLE} strokeWidth={3} dot={{ fill: COLORS.PURPLE, strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2" style={{ color: COLORS.INK }}>
                     Histórico de Atividade
@@ -144,9 +176,9 @@ export function EmployeesTab({ employees, books, loans, upsert, remove, extendLo
                         
                         return (
                           <div key={l.id} className="relative">
-                            <span className={`absolute -left-[21px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white ${isActive ? 'bg-indigo-500' : 'bg-gray-300'}`}></span>
-                            <div className={`rounded-xl px-4 py-3 border ${isActive ? 'border-indigo-100 bg-indigo-50/30' : 'border-gray-200 bg-white'}`}>
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span className={`absolute -left-[21px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white ${isActive ? 'bg-indigo-500' : 'bg-gray-300'}`} style={isActive ? { backgroundColor: COLORS.PURPLE } : {}}></span>
+                            <div className={`rounded-xl px-4 py-3 border ${isActive ? 'border-purple-100 bg-purple-50/30' : 'border-gray-200 bg-white'}`}>
+                              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
                                 <div className="min-w-0">
                                   <p className="text-sm font-bold truncate" style={{ color: COLORS.INK }}>{book?.title || "Título removido"}</p>
                                   <p className="text-xs mt-1" style={{ color: COLORS.MUTED }}>

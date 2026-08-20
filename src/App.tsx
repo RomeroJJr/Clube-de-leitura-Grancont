@@ -224,41 +224,40 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: COLORS.BG, fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen flex text-zinc-900 font-sans" style={{ backgroundColor: "#fbfbfb", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .brand-font { font-family: 'Manrope', system-ui, sans-serif; }
-        select { -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B6478' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; padding-right: 32px; }
+        .brand-font { font-family: 'Lora', serif; }
+        select { -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; padding-right: 32px; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #E4DAEC; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
       `}</style>
 
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-[#0F172A]">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-200">
         <div className="flex items-center gap-2">
-          <Logomark size={26} />
-          <span className="text-white font-bold brand-font">grancont</span>
+          <Logomark size={28} />
+          <span className="text-zinc-950 font-bold brand-font text-xl tracking-tight">grancont</span>
         </div>
-        <button onClick={() => setNavOpen((v) => !v)} className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg bg-white/10">Menu</button>
+        <button onClick={() => setNavOpen((v) => !v)} className="text-zinc-600 hover:bg-zinc-100 text-sm font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 transition-colors">Menu</button>
       </div>
 
       <aside
-        className={`fixed md:static z-30 top-0 left-0 h-full w-64 flex-col px-5 py-6 transition-transform duration-200 ${navOpen ? "flex translate-x-0" : "hidden md:flex"} shadow-2xl md:shadow-none border-r border-white/5 bg-[#0A0F1C]`}
+        className={`fixed md:static z-30 top-0 left-0 h-full w-64 flex-col px-5 py-6 transition-transform duration-300 ease-in-out ${navOpen ? "flex translate-x-0" : "hidden md:flex"} shadow-2xl md:shadow-none border-r border-zinc-200 bg-[#fbfbfb]`}
       >
         <div className="flex items-center gap-3 mb-1">
-          <div className="relative shadow-lg rounded-2xl overflow-hidden shrink-0 group cursor-pointer">
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="p-1.5 bg-indigo-600 rounded-xl">
-              <Logomark size={32} />
-            </div>
+          <div className="relative overflow-hidden shrink-0 group cursor-pointer">
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl z-10"></div>
+            <Logomark size={40} />
           </div>
           <div>
-            <p className="text-white font-extrabold text-xl leading-none brand-font tracking-tight drop-shadow-sm">grancont</p>
-            <p className="text-indigo-300 text-[10px] tracking-[0.2em] uppercase mt-1 font-bold">soluções</p>
+            <p className="text-zinc-950 font-bold text-2xl leading-none brand-font tracking-tight drop-shadow-sm">grancont</p>
+            <p className="text-zinc-500 text-[10px] tracking-[0.25em] uppercase mt-1 font-bold">soluções</p>
           </div>
         </div>
-        <div className="h-px w-full bg-white/5 my-6"></div>
-        <p className="text-slate-500 text-[10px] mb-3 px-2 font-bold uppercase tracking-widest">Clube de Leitura</p>
+        <div className="h-px w-full bg-zinc-200/60 my-6"></div>
+        <p className="text-zinc-400 text-[10px] mb-3 px-3 font-bold uppercase tracking-widest">Clube de Leitura</p>
         <nav className="flex flex-col gap-1.5">
           {NAV.map((n) => {
             const active = tab === n.key;
@@ -266,21 +265,23 @@ export default function App() {
               <button
                 key={n.key}
                 onClick={() => { setTab(n.key); setNavOpen(false); }}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group overflow-hidden ${active ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 relative group overflow-hidden ${active ? "text-zinc-950" : "text-zinc-500 hover:text-zinc-800"}`}
               >
                 {active && (
                   <motion.div 
                     layoutId="activeTabIndicator"
-                    className="absolute inset-0 bg-white/10 rounded-xl"
+                    className="absolute inset-0 rounded-xl"
+                    style={{ backgroundColor: `${COLORS.PURPLE}15` }} // 15% opacity purple
                     initial={false}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
-                <div className={`absolute inset-0 rounded-xl bg-white/5 opacity-0 transition-opacity ${!active && "group-hover:opacity-100"}`}></div>
-                <n.icon size={18} className={`relative z-10 transition-transform duration-300 ${active ? "scale-110 text-indigo-400" : "group-hover:scale-110 text-slate-500"}`} />
+                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full" style={{ backgroundColor: COLORS.PURPLE }} />}
+                <div className={`absolute inset-0 rounded-xl bg-zinc-900/5 opacity-0 transition-opacity ${!active && "group-hover:opacity-100"}`}></div>
+                <n.icon size={18} className={`relative z-10 transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110 text-zinc-400"}`} style={active ? { color: COLORS.PURPLE } : {}} strokeWidth={active ? 2.5 : 2} />
                 <span className="relative z-10">{n.label}</span>
                 {n.key === "loans" && overdueCount > 0 && (
-                  <span className="ml-auto relative z-10 text-[10px] font-bold rounded-full px-2 py-0.5 shadow-sm bg-red-500 text-white">
+                  <span className="ml-auto relative z-10 text-[10px] font-bold rounded-full px-2 py-0.5 shadow-sm bg-red-600 text-white">
                     {overdueCount}
                   </span>
                 )}
@@ -290,38 +291,38 @@ export default function App() {
         </nav>
         <div className="mt-auto pt-6 space-y-1">
           {isAdmin && (
-            <button onClick={() => setSettingsOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all mb-2">
-              <Settings size={18} className="text-slate-500" /> Configurações
+            <button onClick={() => setSettingsOpen(true)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-zinc-500 hover:text-zinc-800 hover:bg-zinc-900/5 transition-all mb-2">
+              <Settings size={18} className="text-zinc-400" /> Configurações
             </button>
           )}
-          <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+          <div className="p-3 bg-white rounded-2xl border border-zinc-200 shadow-sm">
             {user ? (
               <div className="flex items-center justify-between gap-3 w-full">
                 <div className="flex items-center gap-3 min-w-0">
                   {user?.photoURL ? (
-                    <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full shrink-0 border border-white/10" />
+                    <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-9 h-9 rounded-full shrink-0 border border-zinc-100" />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-900 font-bold text-xs shrink-0">
                       {user?.email?.substring(0, 2).toUpperCase() || 'U'}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-white text-xs font-bold truncate">{user?.displayName || user?.email?.split('@')[0]}</p>
-                    <p className="text-slate-400 text-[10px] truncate mt-0.5">{isAdmin ? "Admin" : "Leitor"}</p>
+                    <p className="text-zinc-950 text-xs font-bold truncate">{user?.displayName || user?.email?.split('@')[0]}</p>
+                    <p className="text-zinc-500 text-[10px] truncate mt-0.5">{isAdmin ? "Administrador" : "Leitor"}</p>
                   </div>
                 </div>
-                <button onClick={handleLogout} title="Sair" className="text-slate-400 hover:text-white transition-colors shrink-0">
+                <button onClick={handleLogout} title="Sair" className="text-zinc-400 hover:text-zinc-800 transition-colors shrink-0 p-1.5 rounded-md hover:bg-zinc-100">
                   <LogOut size={16} />
                 </button>
               </div>
             ) : (
               <div className="w-full">
-                <button onClick={() => setLoginOpen(true)} className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold w-full bg-indigo-600 text-white hover:bg-indigo-500 transition-colors">
+                <button onClick={() => setLoginOpen(true)} className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold w-full text-white transition-colors shadow-sm" style={{ backgroundColor: COLORS.INK }}>
                   <ShieldAlert size={16} /> Acesso Admin
                 </button>
                 <div className="mt-3 text-center">
-                  <p className="text-slate-300 text-xs font-semibold">Modo Leitura</p>
-                  <p className="text-slate-500 text-[10px] mt-0.5">Apenas visualização</p>
+                  <p className="text-zinc-600 text-xs font-semibold">Modo Leitura</p>
+                  <p className="text-zinc-400 text-[10px] mt-0.5">Apenas visualização do acervo</p>
                 </div>
               </div>
             )}
@@ -335,10 +336,10 @@ export default function App() {
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            initial={{ opacity: 0, y: 15, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -15, filter: 'blur(4px)' }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           >
             {tab === "dashboard" && <Dashboard employees={employees} books={books} loans={loans} suggestions={suggestions} onGoTo={setTab} notify={notify} />}
             {tab === "employees" && (

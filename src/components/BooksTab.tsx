@@ -174,12 +174,12 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
 
       <ConfirmDialog open={!!confirmId} title="Excluir título?" message="Essa ação não pode ser desfeita." onConfirm={() => handleDelete(confirmId!)} onCancel={() => setConfirmId(null)} />
       
-      <BookDetailsModal open={!!selectedBook} book={selectedBook} onClose={() => setSelectedBook(null)} loans={loans} />
+      <BookDetailsModal open={!!selectedBook} book={selectedBook} onClose={() => setSelectedBook(null)} loans={loans} isAdmin={isAdmin} onEdit={() => { setSelectedBook(null); setModal(selectedBook); }} />
     </div>
   );
 }
 
-function BookDetailsModal({ open, book, onClose, loans }: any) {
+function BookDetailsModal({ open, book, onClose, loans, isAdmin, onEdit }: any) {
   if (!open || !book) return null;
   const avail = availableCopies(book, loans);
 
@@ -233,8 +233,13 @@ function BookDetailsModal({ open, book, onClose, loans }: any) {
           )}
         </div>
       </div>
-      <div className="flex justify-end pt-6">
-        <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors" style={{ backgroundColor: COLORS.PURPLE }}>
+      <div className="flex justify-end gap-3 pt-6">
+        {isAdmin && (
+          <button onClick={onEdit} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-colors shadow-sm flex items-center gap-2">
+            <Pencil size={16} /> Editar
+          </button>
+        )}
+        <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm" style={{ backgroundColor: COLORS.PURPLE }}>
           Fechar
         </button>
       </div>
@@ -242,10 +247,26 @@ function BookDetailsModal({ open, book, onClose, loans }: any) {
   );
 }
 
+const PREDEFINED_CATEGORIES = [
+  "Liderança e Gestão",
+  "Finanças e Economia",
+  "Desenvolvimento Pessoal",
+  "Técnico / Contabilidade",
+  "Técnico / Tributário",
+  "Marketing e Vendas",
+  "Direito e Legislação",
+  "Ficção e Literatura",
+  "Biografia",
+  "Outros"
+];
+
 function BookForm({ initial, onSave, onCancel }: any) {
   const [form, setForm] = useState({ title: "", author: "", category: initial?.category || initial?.area || "", totalCopies: 1, description: "", coverUrl: "", maintenance: false, ...initial });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const isInitialCustom = form.category && !PREDEFINED_CATEGORIES.includes(form.category);
+  const [isCustomCategory, setIsCustomCategory] = useState(isInitialCustom);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -319,7 +340,35 @@ function BookForm({ initial, onSave, onCancel }: any) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <FieldLabel>Categoria / Gênero</FieldLabel>
-          <input className={inputClass} style={inputStyle} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Ex.: Finanças, Ficção..." list="categories-list" />
+          <select 
+            className={inputClass} 
+            style={inputStyle} 
+            value={isCustomCategory ? "Outros" : form.category} 
+            onChange={(e) => {
+              if (e.target.value === "Outros") {
+                setIsCustomCategory(true);
+                setForm({ ...form, category: "" });
+              } else {
+                setIsCustomCategory(false);
+                setForm({ ...form, category: e.target.value });
+              }
+            }}
+          >
+            <option value="" disabled>Selecione...</option>
+            {PREDEFINED_CATEGORIES.filter(c => c !== "Outros").map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+            <option value="Outros">Outros...</option>
+          </select>
+          {isCustomCategory && (
+            <input 
+              className={`${inputClass} mt-2`} 
+              style={inputStyle} 
+              value={form.category} 
+              onChange={(e) => setForm({ ...form, category: e.target.value })} 
+              placeholder="Digite a nova categoria..." 
+            />
+          )}
         </div>
         <div>
           <FieldLabel>Exemplares</FieldLabel>

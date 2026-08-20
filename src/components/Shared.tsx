@@ -4,12 +4,25 @@ import { hueOf, initials, STATUS_META, LoanStatus, COLORS } from '../lib/utils';
 
 export function Logomark({ size = 32 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="64" height="64" rx="16" fill="white" fillOpacity="0.15" />
-      <path d="M20 44V20C20 17.7909 21.7909 16 24 16H40C42.2091 16 44 17.7909 44 20V44L32 38L20 44Z" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M26 26H38" stroke="white" strokeWidth="4" strokeLinecap="round" />
-      <path d="M26 32H34" stroke="white" strokeWidth="4" strokeLinecap="round" />
-    </svg>
+    <>
+      <img 
+        src="/logo.png" 
+        alt="Mascote Grancont" 
+        style={{ width: size, height: size, objectFit: 'cover', borderRadius: '25%' }} 
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+          const next = e.currentTarget.nextElementSibling as HTMLElement;
+          if (next) next.style.display = 'block';
+        }}
+      />
+      <svg className="hidden-fallback" style={{ display: 'none' }} width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="16" fill="white" fillOpacity="0.15" />
+        <path d="M20 44V20C20 17.7909 21.7909 16 24 16H40C42.2091 16 44 17.7909 44 20V44L32 38L20 44Z" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M26 26H38" stroke="white" strokeWidth="4" strokeLinecap="round" />
+        <path d="M26 32H34" stroke="white" strokeWidth="4" strokeLinecap="round" />
+      </svg>
+    </>
   );
 }
 
@@ -29,7 +42,7 @@ export function Badge({ status }: { status: LoanStatus }) {
   const meta = STATUS_META[status];
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
+      className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap"
       style={{ color: meta.color, backgroundColor: meta.bg }}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.color }} />
@@ -40,16 +53,16 @@ export function Badge({ status }: { status: LoanStatus }) {
 
 export function EmptyState({ icon: Icon, title, subtitle, actionLabel, onAction }: any) {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-16 px-6 border-2 border-dashed rounded-2xl" style={{ borderColor: COLORS.BORDER_STRONG }}>
-      <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: "#F1E9F5" }}>
-        <Icon size={26} style={{ color: COLORS.PURPLE }} />
+    <div className="flex flex-col items-center justify-center text-center py-24 px-6 border border-zinc-200 bg-white rounded-xl shadow-sm">
+      <div className="w-12 h-12 rounded-full flex items-center justify-center mb-5 bg-zinc-100 border border-zinc-200">
+        <Icon size={20} className="text-zinc-600" />
       </div>
-      <p className="font-semibold" style={{ color: COLORS.INK }}>{title}</p>
-      <p className="text-sm mt-1 max-w-sm" style={{ color: COLORS.MUTED }}>{subtitle}</p>
+      <p className="font-semibold text-zinc-900">{title}</p>
+      <p className="text-sm mt-1 max-w-sm text-zinc-500">{subtitle}</p>
       {actionLabel && (
         <button
           onClick={onAction}
-          className="mt-5 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold text-white transition-all active:scale-[0.98] shadow-sm"
           style={{ backgroundColor: COLORS.PURPLE }}
         >
           <Plus size={16} /> {actionLabel}
@@ -75,20 +88,20 @@ export function Toast({ toast }: { toast: any }) {
 export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: any) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ backgroundColor: "rgba(36,20,41,0.45)" }}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-zinc-950/40 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 border border-zinc-200">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "#FBEAEA" }}>
-            <AlertTriangle size={18} style={{ color: "#C63C3C" }} />
+          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 border border-red-100">
+            <AlertTriangle size={16} className="text-red-600" />
           </div>
-          <p className="font-semibold" style={{ color: COLORS.INK }}>{title}</p>
+          <p className="font-bold text-zinc-900">{title}</p>
         </div>
-        <p className="text-sm mb-5" style={{ color: "#6B6478" }}>{message}</p>
+        <p className="text-sm mb-6 text-zinc-500">{message}</p>
         <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ color: COLORS.INK, backgroundColor: COLORS.BORDER }}>
+          <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-colors">
             Cancelar
           </button>
-          <button onClick={onConfirm} className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: "#C63C3C" }}>
+          <button onClick={onConfirm} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
             Excluir
           </button>
         </div>
@@ -197,10 +210,11 @@ export function IconBtn({ children, onClick, danger, title }: any) {
     <button
       title={title}
       onClick={onClick}
-      className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-      style={{ color: danger ? "#C63C3C" : COLORS.PURPLE }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = danger ? "#FBEAEA" : "#F1E9F5")}
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+      className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${
+        danger 
+          ? 'text-red-600 hover:bg-red-50 hover:text-red-700' 
+          : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900'
+      }`}
     >
       {children}
     </button>
@@ -209,31 +223,36 @@ export function IconBtn({ children, onClick, danger, title }: any) {
 
 export function TabHeader({ title, subtitle, actionLabel, onAction, query, setQuery, placeholder, extra }: any) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
-      <div>
-        <h2 className="text-xl font-bold brand-font" style={{ color: COLORS.INK }}>{title}</h2>
-        <p className="text-sm mt-0.5" style={{ color: COLORS.MUTED }}>{subtitle}</p>
+    <div className="mb-8 border-b border-zinc-200 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 brand-font">{title}</h1>
+          {subtitle && <p className="text-sm mt-2 text-zinc-500 max-w-lg leading-relaxed">{subtitle}</p>}
+        </div>
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          {extra}
+          {actionLabel && (
+            <button
+              onClick={onAction}
+              className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all shadow-sm active:scale-[0.98]"
+              style={{ backgroundColor: COLORS.PURPLE }}
+            >
+              <Plus size={16} /> <span className="hidden sm:inline">{actionLabel}</span>
+            </button>
+          )}
+        </div>
       </div>
-      <div className="flex gap-2 flex-wrap">
-        <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#B4ACC0" }} />
+      {(setQuery || placeholder) && (
+        <div className="relative mt-2">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
-            className="pl-9 pr-3 py-2.5 rounded-lg border text-sm outline-none w-full md:w-52"
-            style={inputStyle}
+            className="w-full md:w-80 pl-10 pr-4 py-2.5 text-sm rounded-xl border bg-white border-zinc-200 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-all shadow-sm"
           />
         </div>
-        {extra}
-        <button
-          onClick={onAction}
-          className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shrink-0 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          style={{ backgroundColor: COLORS.PURPLE }}
-        >
-          <Plus size={16} /> <span className="hidden sm:inline">{actionLabel}</span>
-        </button>
-      </div>
+      )}
     </div>
   );
 }
@@ -243,10 +262,9 @@ export function ExportBtn({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       title="Exportar CSV"
-      className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2.5 text-sm font-semibold shrink-0"
-      style={{ color: COLORS.PURPLE, backgroundColor: "#F1E9F5" }}
+      className="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-colors shadow-sm shrink-0"
     >
-      <Download size={15} /> <span className="hidden lg:inline">Exportar</span>
+      <Download size={16} /> <span className="hidden lg:inline">Exportar</span>
     </button>
   );
 }

@@ -118,13 +118,13 @@ export const STATUS_META: Record<LoanStatus, { label: string; color: string; bg:
 };
 
 export const COLORS = {
-  PURPLE: "#4F46E5", // Indigo 600
-  PURPLE_DARK: "#1E1B4B", // Indigo 950
-  INK: "#0F172A", // Slate 900
-  MUTED: "#64748B", // Slate 500
-  BORDER: "#E2E8F0", // Slate 200
-  BORDER_STRONG: "#CBD5E1", // Slate 300
-  BG: "#F8FAFC", // Slate 50
+  PURPLE: "#70289B", // Grancont Mascot Purple
+  PURPLE_DARK: "#4F1B6E", // Grancont Dark
+  INK: "#2D1D3A", // Dark purple-grey instead of black
+  MUTED: "#786785", // Muted purple-grey
+  BORDER: "#EBE6ED", // Light purple-grey
+  BORDER_STRONG: "#D4C8D9", // Stronger purple-grey
+  BG: "#FCFBFC", // light background with purple tint
 };
 
 export function getLast6Months() {
