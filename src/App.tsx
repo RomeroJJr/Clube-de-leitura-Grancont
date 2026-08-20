@@ -4,7 +4,7 @@ import { onSnapshot, collection, doc, setDoc, deleteDoc, getDoc } from 'firebase
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
 
-import { Bell, Users, BookOpen, ArrowRightLeft, Settings, ShieldAlert, LogOut, Lightbulb, Bookmark } from "lucide-react";
+import { Bell, Users, BookOpen, ArrowRightLeft, Settings, ShieldAlert, LogOut, Lightbulb, Bookmark, PackagePlus } from "lucide-react";
 import { todayISO, addDays, daysUntil, COLORS } from "./lib/utils";
 import { Logomark, Toast, ReturnModal, LoginModal } from "./components/Shared";
 import { Dashboard } from "./components/Dashboard";
@@ -13,12 +13,14 @@ import { BooksTab } from "./components/BooksTab";
 import { LoansTab } from "./components/LoansTab";
 import { SuggestionsTab } from "./components/SuggestionsTab";
 import { ReservationsTab } from "./components/ReservationsTab";
+import { AcquisitionsTab } from "./components/AcquisitionsTab";
 import { SettingsModal } from "./components/SettingsModal";
 
 const NAV = [
   { key: "dashboard", label: "Painel", icon: Bell },
   { key: "employees", label: "Colaboradores", icon: Users },
   { key: "books", label: "Acervo", icon: BookOpen },
+  { key: "acquisitions", label: "Novas Aquisições", icon: PackagePlus },
   { key: "loans", label: "Empréstimos", icon: ArrowRightLeft },
   { key: "reservations", label: "Reservas", icon: Bookmark },
   { key: "suggestions", label: "Sugestões", icon: Lightbulb },
@@ -31,6 +33,7 @@ export default function App() {
   const [loans, setLoans] = useState<any[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
+  const [acquisitions, setAcquisitions] = useState<any[]>([]);
   const [settings, setSettings] = useState({ defaultLoanDays: 21 });
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null);
@@ -115,10 +118,14 @@ export default function App() {
 
     const unsubReservations = onSnapshot(collection(db, 'reservations'), (snap) => {
       setReservations(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-      setLoading(false);
     }, (err) => handleFirestoreError(err, OperationType.LIST, 'reservations'));
 
-    return () => { unsubSettings(); unsubEmployees(); unsubBooks(); unsubLoans(); unsubSuggestions(); unsubReservations(); };
+    const unsubAcquisitions = onSnapshot(collection(db, 'acquisitions'), (snap) => {
+      setAcquisitions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, 'acquisitions'));
+
+    return () => { unsubSettings(); unsubEmployees(); unsubBooks(); unsubLoans(); unsubSuggestions(); unsubReservations(); unsubAcquisitions(); };
   }, [triggerNotifications]);
 
   const upsertDoc = async (col: string, item: any, successMsg: string) => {
@@ -200,6 +207,9 @@ export default function App() {
   const upsertReservation = (item: any) => upsertDoc('reservations', item, "Reserva salva.");
   const removeReservation = (id: string) => deleteDocItem('reservations', id, "Reserva cancelada.");
 
+  const upsertAcquisition = (item: any) => upsertDoc('acquisitions', item, "Nova aquisição cadastrada.");
+  const removeAcquisition = (id: string) => deleteDocItem('acquisitions', id, "Aquisição removida.");
+
   const saveSettings = async (s: any) => {
     try {
       await setDoc(doc(db, 'settings', 'global'), s);
@@ -237,8 +247,7 @@ export default function App() {
 
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-200">
         <div className="flex items-center gap-2">
-          <Logomark size={28} />
-          <span className="text-zinc-950 font-bold brand-font text-xl tracking-tight">grancont</span>
+          <span className="text-zinc-950 font-bold brand-font text-xl tracking-tight">Clube de Leitura</span>
         </div>
         <button onClick={() => setNavOpen((v) => !v)} className="text-zinc-600 hover:bg-zinc-100 text-sm font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 transition-colors">Menu</button>
       </div>
@@ -246,18 +255,7 @@ export default function App() {
       <aside
         className={`fixed md:static z-30 top-0 left-0 h-full w-64 flex-col px-5 py-6 transition-transform duration-300 ease-in-out ${navOpen ? "flex translate-x-0" : "hidden md:flex"} shadow-2xl md:shadow-none border-r border-zinc-200 bg-[#fbfbfb]`}
       >
-        <div className="flex items-center gap-3 mb-1">
-          <div className="relative overflow-hidden shrink-0 group cursor-pointer">
-            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl z-10"></div>
-            <Logomark size={40} />
-          </div>
-          <div>
-            <p className="text-zinc-950 font-bold text-2xl leading-none brand-font tracking-tight drop-shadow-sm">grancont</p>
-            <p className="text-zinc-500 text-[10px] tracking-[0.25em] uppercase mt-1 font-bold">soluções</p>
-          </div>
-        </div>
-        <div className="h-px w-full bg-zinc-200/60 my-6"></div>
-        <p className="text-zinc-400 text-[10px] mb-3 px-3 font-bold uppercase tracking-widest">Clube de Leitura</p>
+        <p className="text-zinc-500 text-[11px] mb-4 px-3 font-bold uppercase tracking-widest">Clube de Leitura</p>
         <nav className="flex flex-col gap-1.5">
           {NAV.map((n) => {
             const active = tab === n.key;
@@ -390,6 +388,15 @@ export default function App() {
                 employees={employees}
                 upsert={upsertSuggestion}
                 remove={removeSuggestion}
+                notify={notify}
+                isAdmin={isAdmin}
+              />
+            )}
+            {tab === "acquisitions" && (
+              <AcquisitionsTab
+                acquisitions={acquisitions}
+                upsert={upsertAcquisition}
+                remove={removeAcquisition}
                 notify={notify}
                 isAdmin={isAdmin}
               />
