@@ -76,19 +76,22 @@ export default function App() {
 
     const emp = employees.find((e: any) => e.name.toLowerCase() === u.trim().toLowerCase());
     if (emp) {
+      const isSpecialAdmin = emp.name.toLowerCase() === 'romero' || emp.name.toLowerCase() === 'beatriz';
+      const userType = isSpecialAdmin ? 'admin' : 'user';
+
       if (!emp.password) {
         await upsertDoc('employees', { ...emp, password: p }, "Senha cadastrada com sucesso!");
-        const userData = { type: 'user', id: emp.id, name: emp.name };
+        const userData = { type: userType, id: emp.id, name: emp.name };
         localStorage.setItem("authUser", JSON.stringify(userData));
         setUser(userData);
-        setIsAdmin(false);
+        setIsAdmin(isSpecialAdmin);
         return true;
       } else {
         if (emp.password === p) {
-          const userData = { type: 'user', id: emp.id, name: emp.name };
+          const userData = { type: userType, id: emp.id, name: emp.name };
           localStorage.setItem("authUser", JSON.stringify(userData));
           setUser(userData);
-          setIsAdmin(false);
+          setIsAdmin(isSpecialAdmin);
           notify("Login realizado com sucesso!");
           return true;
         } else {
