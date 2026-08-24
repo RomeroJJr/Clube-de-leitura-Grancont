@@ -74,9 +74,20 @@ export default function App() {
       return true;
     }
 
-    const emp = employees.find((e: any) => e.name.toLowerCase() === u.trim().toLowerCase());
+    if ((u.toLowerCase().trim() === 'romero' || u.toLowerCase().trim() === 'beatriz') && p === 'Grancont123') {
+      const adminName = u.trim().charAt(0).toUpperCase() + u.trim().slice(1).toLowerCase();
+      const adminData = { type: 'admin', name: adminName };
+      localStorage.setItem("authUser", JSON.stringify(adminData));
+      setUser(adminData);
+      setIsAdmin(true);
+      notify(`Login admin realizado com sucesso! Bem-vindo(a), ${adminName}.`);
+      return true;
+    }
+
+    const emp = employees.find((e: any) => e.name.trim().toLowerCase() === u.trim().toLowerCase());
     if (emp) {
-      const isSpecialAdmin = emp.name.toLowerCase() === 'romero' || emp.name.toLowerCase() === 'beatriz';
+      const empName = emp.name.trim().toLowerCase();
+      const isSpecialAdmin = empName === 'romero' || empName === 'beatriz' || empName === 'admin' || empName === 'administrador' || empName === 'administração';
       const userType = isSpecialAdmin ? 'admin' : 'user';
 
       if (!emp.password) {
