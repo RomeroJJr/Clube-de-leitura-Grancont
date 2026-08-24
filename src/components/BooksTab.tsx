@@ -1,25 +1,46 @@
 import React, { useState, useRef } from 'react';
-import { BookOpen, Pencil, Trash2, AlertCircle, Upload, X, CheckCircle2, Wrench } from 'lucide-react';
-import { uid, downloadCSV, availableCopies, tagStyle, COLORS, compressImage } from '../lib/utils';
+import { BookOpen, Pencil, Trash2, AlertCircle, Upload, X, CheckCircle2, Wrench, Calendar } from 'lucide-react';
+import { uid, downloadCSV, availableCopies, tagStyle, COLORS, compressImage, fmtDate } from '../lib/utils';
 import { TabHeader, ExportBtn, EmptyState, IconBtn, Modal, ConfirmDialog, FieldLabel, inputClass, inputStyle } from './Shared';
 
-export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any) {
+export function BooksTab({ books, loans, acquisitions, upsert, remove, notify, isAdmin }: any) {
   const [query, setQuery] = useState("");
   const [modal, setModal] = useState<any>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("Todas");
+  const [statusFilter, setStatusFilter] = useState("Todos");
   const [selectedBook, setSelectedBook] = useState<any>(null);
 
   const categories = ["Todas", ...Array.from(new Set(books.map((b: any) => b.category || b.area).filter(Boolean))) as string[]];
+  const statuses = ["Todos", "Disponíveis", "Emprestados", "A chegar"];
 
-  const filtered = books.filter((b: any) => {
+  const normAcquisitions = (acquisitions || []).map((a: any) => ({
+    ...a,
+    isAcquisition: true,
+    totalCopies: 0,
+    maintenance: false
+  }));
+
+  const combined = [...books, ...normAcquisitions];
+
+  const filtered = combined.filter((b: any) => {
     const bCat = b.category || b.area || "";
     const matchesQuery =
       b.title.toLowerCase().includes(query.toLowerCase()) ||
       (b.author || "").toLowerCase().includes(query.toLowerCase()) ||
       bCat.toLowerCase().includes(query.toLowerCase());
     const matchesCategory = categoryFilter === "Todas" || bCat === categoryFilter;
-    return matchesQuery && matchesCategory;
+    
+    let matchesStatus = true;
+    if (statusFilter === "Disponíveis") {
+      matchesStatus = !b.isAcquisition && !b.maintenance && availableCopies(b, loans) > 0;
+    } else if (statusFilter === "Emprestados") {
+      matchesStatus = !b.isAcquisition && !b.maintenance && availableCopies(b, loans) === 0;
+    } else if (statusFilter === "A chegar") {
+      matchesStatus = b.isAcquisition;
+    }
+
+    return matchesQuery && matchesCategory && matchesStatus;
   });
 
   function save(form: any) {
@@ -69,26 +90,43 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
         extra={books.length > 0 && <ExportBtn onClick={exportCSV} />}
       />
 
-      {categories.length > 1 && (
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {categories.map((c) => (
+      <div className="flex flex-col gap-3 mb-5">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2 shrink-0">Status:</span>
+          {statuses.map((s) => (
             <button
-              key={c}
-              onClick={() => setCategoryFilter(c)}
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap"
-              style={categoryFilter === c ? { backgroundColor: COLORS.PURPLE, color: "white" } : tagStyle(c === "Todas" ? "geral-x" : c)}
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors"
+              style={statusFilter === s ? { backgroundColor: COLORS.INK, color: "white" } : { backgroundColor: "#F3F4F6", color: "#4B5563" }}
             >
-              {c}
+              {s}
             </button>
           ))}
         </div>
-      )}
+        
+        {categories.length > 1 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2 shrink-0">Categoria:</span>
+            {categories.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCategoryFilter(c)}
+                className="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap"
+                style={categoryFilter === c ? { backgroundColor: COLORS.PURPLE, color: "white" } : tagStyle(c === "Todas" ? "geral-x" : c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title={books.length === 0 ? "Nenhum título cadastrado" : "Nada encontrado"}
-          subtitle={books.length === 0 ? "Adicione os livros já comprados e os que forem chegando." : "Tente ajustar a busca ou o filtro."}
+          title={books.length === 0 && normAcquisitions.length === 0 ? "Nenhum título cadastrado" : "Nada encontrado"}
+          subtitle={books.length === 0 && normAcquisitions.length === 0 ? "Adicione os livros já comprados e os que forem chegando." : "Tente ajustar a busca ou os filtros."}
           actionLabel={books.length === 0 && isAdmin ? "Novo título" : undefined}
           onAction={() => isAdmin && setModal({})}
         />
@@ -103,7 +141,11 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
             let statusStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
             let StatusIcon = CheckCircle2;
             
-            if (isMaintenance) {
+            if (b.isAcquisition) {
+              statusLabel = "A chegar";
+              statusStyle = "bg-orange-50 text-orange-700 border-orange-200";
+              StatusIcon = Calendar;
+            } else if (isMaintenance) {
               statusLabel = "Em Manutenção";
               statusStyle = "bg-amber-50 text-amber-700 border-amber-200";
               StatusIcon = Wrench;
@@ -116,8 +158,10 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
             return (
               <div 
                 key={b.id} 
-                onClick={() => setSelectedBook(b)}
-                className="bg-white rounded-2xl border p-4 flex flex-col hover:shadow-md transition-shadow cursor-pointer relative" 
+                onClick={() => {
+                  if (!b.isAcquisition) setSelectedBook(b);
+                }}
+                className={`bg-white rounded-2xl border p-4 flex flex-col hover:shadow-md transition-shadow relative ${!b.isAcquisition ? 'cursor-pointer' : ''}`} 
                 style={{ borderColor: COLORS.BORDER }}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -138,7 +182,7 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
                       </div>
                     </div>
                   </div>
-                  {isAdmin && (
+                  {isAdmin && !b.isAcquisition && (
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <IconBtn onClick={() => setModal(b)}><Pencil size={14} /></IconBtn>
                       <IconBtn danger onClick={() => setConfirmId(b.id)}><Trash2 size={14} /></IconBtn>
@@ -148,7 +192,7 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
                 <div className="mt-3 flex-1">
                   <p className="font-semibold leading-snug" style={{ color: COLORS.INK }}>{b.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: COLORS.MUTED }}>{b.author || "Autor não informado"}</p>
-                  {b.description && (
+                  {b.description && !b.isAcquisition && (
                     <p className="text-xs mt-2 line-clamp-2 text-slate-500 leading-relaxed" title={b.description}>
                       {b.description}
                     </p>
@@ -158,9 +202,16 @@ export function BooksTab({ books, loans, upsert, remove, notify, isAdmin }: any)
                   {bCat ? (
                     <span className="text-xs font-medium rounded-full px-2.5 py-1 truncate max-w-[120px]" style={tagStyle(bCat)}>{bCat}</span>
                   ) : <span />}
-                  <span className="text-xs font-bold whitespace-nowrap ml-2" style={{ color: avail > 0 ? "#1F9D64" : "#C63C3C" }}>
-                    {avail}/{b.totalCopies || 1} disp.
-                  </span>
+                  
+                  {b.isAcquisition ? (
+                    <span className="text-xs font-bold whitespace-nowrap ml-2 text-slate-500">
+                      Chega: {fmtDate(b.expectedDate)}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold whitespace-nowrap ml-2" style={{ color: avail > 0 ? "#1F9D64" : "#C63C3C" }}>
+                      {avail}/{b.totalCopies || 1} disp.
+                    </span>
+                  )}
                 </div>
               </div>
             );

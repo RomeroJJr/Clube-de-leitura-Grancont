@@ -399,7 +399,7 @@ export default function App() {
                 defaultLoanDays={settings.defaultLoanDays} 
               />
             )}
-            {tab === "books" && <BooksTab books={books} loans={loans} upsert={upsertBook} remove={removeBook} notify={notify} isAdmin={isAdmin} />}
+            {tab === "books" && <BooksTab books={books} loans={loans} acquisitions={acquisitions} upsert={upsertBook} remove={removeBook} notify={notify} isAdmin={isAdmin} />}
             {tab === "loans" && (
               <LoansTab
                 employees={employees}
