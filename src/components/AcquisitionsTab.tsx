@@ -102,6 +102,8 @@ export function AcquisitionsTab({ acquisitions, upsert, remove, onArrived, notif
           setArriveConfirmId(null); 
         }} 
         onCancel={() => setArriveConfirmId(null)} 
+        confirmLabel="Confirmar"
+        confirmStyle="success"
       />
     </div>
   );

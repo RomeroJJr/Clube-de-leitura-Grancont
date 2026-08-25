@@ -5,7 +5,7 @@ import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from
 import { db, auth, handleFirestoreError, OperationType } from './lib/firebase';
 
 import { Bell, Users, BookOpen, ArrowRightLeft, Settings, ShieldAlert, LogOut, Lightbulb, Bookmark, PackagePlus } from "lucide-react";
-import { todayISO, addDays, daysUntil, COLORS } from "./lib/utils";
+import { todayISO, addDays, daysUntil, COLORS, uid } from "./lib/utils";
 import { Logomark, Toast, ReturnModal, LoginModal } from "./components/Shared";
 import { Dashboard } from "./components/Dashboard";
 import { EmployeesTab } from "./components/EmployeesTab";
@@ -268,6 +268,7 @@ export default function App() {
       await setDoc(doc(db, 'books', bookData.id), bookData);
       await deleteDoc(doc(db, 'acquisitions', item.id));
       notify("Livro transferido para o Acervo com sucesso!");
+      setTab("books");
     } catch (e: any) {
       notify(e.message || "Erro ao transferir livro.", "error");
     }
@@ -418,7 +419,7 @@ export default function App() {
                 defaultLoanDays={settings.defaultLoanDays} 
               />
             )}
-            {tab === "books" && <BooksTab books={books} loans={loans} acquisitions={acquisitions} upsert={upsertBook} remove={removeBook} notify={notify} isAdmin={isAdmin} />}
+            {tab === "books" && <BooksTab books={books} loans={loans} acquisitions={acquisitions} upsert={upsertBook} remove={removeBook} onArrived={markAcquisitionArrived} notify={notify} isAdmin={isAdmin} />}
             {tab === "loans" && (
               <LoansTab
                 employees={employees}

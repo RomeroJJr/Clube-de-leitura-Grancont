@@ -3,10 +3,11 @@ import { BookOpen, Pencil, Trash2, AlertCircle, Upload, X, CheckCircle2, Wrench,
 import { uid, downloadCSV, availableCopies, tagStyle, COLORS, compressImage, fmtDate } from '../lib/utils';
 import { TabHeader, ExportBtn, EmptyState, IconBtn, Modal, ConfirmDialog, FieldLabel, inputClass, inputStyle } from './Shared';
 
-export function BooksTab({ books, loans, acquisitions, upsert, remove, notify, isAdmin }: any) {
+export function BooksTab({ books, loans, acquisitions, upsert, remove, onArrived, notify, isAdmin }: any) {
   const [query, setQuery] = useState("");
   const [modal, setModal] = useState<any>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [arriveConfirmId, setArriveConfirmId] = useState<any>(null);
   const [categoryFilter, setCategoryFilter] = useState("Todas");
   const [statusFilter, setStatusFilter] = useState("Todos");
   const [selectedBook, setSelectedBook] = useState<any>(null);
@@ -182,10 +183,23 @@ export function BooksTab({ books, loans, acquisitions, upsert, remove, notify, i
                       </div>
                     </div>
                   </div>
-                  {isAdmin && !b.isAcquisition && (
+                  {isAdmin && (
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                      <IconBtn onClick={() => setModal(b)}><Pencil size={14} /></IconBtn>
-                      <IconBtn danger onClick={() => setConfirmId(b.id)}><Trash2 size={14} /></IconBtn>
+                      {b.isAcquisition && onArrived && (
+                        <button 
+                          onClick={() => setArriveConfirmId(b)}
+                          className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                        >
+                          <CheckCircle2 size={14} />
+                          Chegou
+                        </button>
+                      )}
+                      {!b.isAcquisition && (
+                        <>
+                          <IconBtn onClick={() => setModal(b)}><Pencil size={14} /></IconBtn>
+                          <IconBtn danger onClick={() => setConfirmId(b.id)}><Trash2 size={14} /></IconBtn>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -225,6 +239,19 @@ export function BooksTab({ books, loans, acquisitions, upsert, remove, notify, i
 
       <ConfirmDialog open={!!confirmId} title="Excluir título?" message="Essa ação não pode ser desfeita." onConfirm={() => handleDelete(confirmId!)} onCancel={() => setConfirmId(null)} />
       
+      <ConfirmDialog 
+        open={!!arriveConfirmId} 
+        title="Livro Chegou?" 
+        message={`Confirma que o exemplar "${arriveConfirmId?.title}" chegou no escritório? Ele será movido para os livros disponíveis no Acervo.`} 
+        onConfirm={() => { 
+          if(onArrived) onArrived(arriveConfirmId); 
+          setArriveConfirmId(null); 
+        }} 
+        onCancel={() => setArriveConfirmId(null)}
+        confirmLabel="Confirmar"
+        confirmStyle="success"
+      />
+
       <BookDetailsModal open={!!selectedBook} book={selectedBook} onClose={() => setSelectedBook(null)} loans={loans} isAdmin={isAdmin} onEdit={() => { setSelectedBook(null); setModal(selectedBook); }} />
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, AlertTriangle, X, Download, Users } from 'lucide-react';
+import { Search, Plus, AlertTriangle, X, Download, Users, CheckCircle2 } from 'lucide-react';
 import { hueOf, initials, STATUS_META, LoanStatus, COLORS } from '../lib/utils';
 
 export function Logomark({ size = 32 }: { size?: number }) {
@@ -85,14 +85,18 @@ export function Toast({ toast }: { toast: any }) {
   );
 }
 
-export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: any) {
+export function ConfirmDialog({ open, title, message, onConfirm, onCancel, confirmLabel = "Excluir", confirmStyle = "danger" }: any) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-zinc-950/40 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 border border-zinc-200">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 border border-red-100">
-            <AlertTriangle size={16} className="text-red-600" />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${confirmStyle === "danger" ? "bg-red-50 border-red-100" : "bg-emerald-50 border-emerald-100"}`}>
+            {confirmStyle === "danger" ? (
+              <AlertTriangle size={16} className="text-red-600" />
+            ) : (
+              <CheckCircle2 size={16} className="text-emerald-600" />
+            )}
           </div>
           <p className="font-bold text-zinc-900">{title}</p>
         </div>
@@ -101,8 +105,8 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: any
           <button onClick={onCancel} className="px-4 py-2 rounded-lg text-sm font-semibold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-colors">
             Cancelar
           </button>
-          <button onClick={onConfirm} className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
-            Excluir
+          <button onClick={onConfirm} className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors shadow-sm ${confirmStyle === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}>
+            {confirmLabel}
           </button>
         </div>
       </div>
