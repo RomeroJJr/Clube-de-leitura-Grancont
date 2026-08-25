@@ -50,6 +50,11 @@ Caso não consiga encontrar com absoluta certeza, não retorne nada.`;
         return res.json({ coverUrl: "" });
       }
     } catch (err: any) {
+      const isRateLimit = err.status === 429 || (err.message && err.message.includes('429'));
+      if (isRateLimit) {
+        console.warn("Alerta: Limite de cota da IA excedido.");
+        return res.status(429).json({ error: "Limite de cota da IA (Gemini) excedido. Por favor, tente novamente mais tarde." });
+      }
       console.error("Erro ao buscar capa com IA:", err);
       return res.status(500).json({ error: err.message });
     }

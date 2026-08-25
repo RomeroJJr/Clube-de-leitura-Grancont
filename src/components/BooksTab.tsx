@@ -344,7 +344,14 @@ function BookForm({ initial, onSave, onCancel }: any) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: form.title, author: form.author })
       });
+      
       const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.error || "Erro na comunicação com a IA.");
+        return;
+      }
+
       if (data.coverUrl) {
         setForm(prev => ({ ...prev, coverUrl: data.coverUrl }));
       } else {

@@ -254,6 +254,25 @@ export default function App() {
   const upsertAcquisition = (item: any) => upsertDoc('acquisitions', item, "Nova aquisição cadastrada.");
   const removeAcquisition = (id: string) => deleteDocItem('acquisitions', id, "Aquisição removida.");
 
+  const markAcquisitionArrived = async (item: any) => {
+    try {
+      const bookData = {
+        title: item.title,
+        author: item.author || "",
+        coverUrl: item.coverUrl || "",
+        category: "Geral",
+        totalCopies: 1,
+        maintenance: false,
+        id: uid() // We generate a new uid for the book collection
+      };
+      await setDoc(doc(db, 'books', bookData.id), bookData);
+      await deleteDoc(doc(db, 'acquisitions', item.id));
+      notify("Livro transferido para o Acervo com sucesso!");
+    } catch (e: any) {
+      notify(e.message || "Erro ao transferir livro.", "error");
+    }
+  };
+
   const saveSettings = async (s: any) => {
     try {
       await setDoc(doc(db, 'settings', 'global'), s);
@@ -442,6 +461,7 @@ export default function App() {
                 acquisitions={acquisitions}
                 upsert={upsertAcquisition}
                 remove={removeAcquisition}
+                onArrived={markAcquisitionArrived}
                 notify={notify}
                 isAdmin={isAdmin}
               />

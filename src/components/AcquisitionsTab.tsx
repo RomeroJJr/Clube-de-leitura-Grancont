@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { PackagePlus, Calendar, Trash2, Pencil, Image as ImageIcon } from 'lucide-react';
+import { PackagePlus, Calendar, Trash2, Pencil, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import { uid, COLORS, fmtDate } from '../lib/utils';
 import { TabHeader, EmptyState, IconBtn, Modal, ConfirmDialog, FieldLabel, inputClass, inputStyle } from './Shared';
 
-export function AcquisitionsTab({ acquisitions, upsert, remove, notify, isAdmin }: any) {
+export function AcquisitionsTab({ acquisitions, upsert, remove, onArrived, notify, isAdmin }: any) {
   const [modal, setModal] = useState<any>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [arriveConfirmId, setArriveConfirmId] = useState<any>(null);
 
   const sorted = [...(acquisitions || [])].sort((a: any, b: any) => {
     return new Date(a.expectedDate || '2099-01-01').getTime() - new Date(b.expectedDate || '2099-01-01').getTime();
@@ -67,9 +68,18 @@ export function AcquisitionsTab({ acquisitions, upsert, remove, notify, isAdmin 
               </div>
               
               {isAdmin && (
-                <div className="flex items-center justify-end gap-2 mt-auto pt-3 border-t" style={{ borderColor: COLORS.BORDER }}>
-                  <IconBtn onClick={() => setModal(item)}><Pencil size={16} /></IconBtn>
-                  <IconBtn danger onClick={() => setConfirmId(item.id)}><Trash2 size={16} /></IconBtn>
+                <div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t" style={{ borderColor: COLORS.BORDER }}>
+                  <button 
+                    onClick={() => setArriveConfirmId(item)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                  >
+                    <CheckCircle size={14} />
+                    Chegou
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <IconBtn onClick={() => setModal(item)}><Pencil size={16} /></IconBtn>
+                    <IconBtn danger onClick={() => setConfirmId(item.id)}><Trash2 size={16} /></IconBtn>
+                  </div>
                 </div>
               )}
             </div>
@@ -82,6 +92,17 @@ export function AcquisitionsTab({ acquisitions, upsert, remove, notify, isAdmin 
       </Modal>
 
       <ConfirmDialog open={!!confirmId} title="Excluir aquisição?" message="Esse título não aparecerá mais como próxima novidade." onConfirm={() => { remove(confirmId!); setConfirmId(null); }} onCancel={() => setConfirmId(null)} />
+      
+      <ConfirmDialog 
+        open={!!arriveConfirmId} 
+        title="Livro Chegou?" 
+        message={`Confirma que o exemplar "${arriveConfirmId?.title}" chegou no escritório? Ele será transferido para o Acervo principal e ficará disponível para empréstimo.`} 
+        onConfirm={() => { 
+          if(onArrived) onArrived(arriveConfirmId); 
+          setArriveConfirmId(null); 
+        }} 
+        onCancel={() => setArriveConfirmId(null)} 
+      />
     </div>
   );
 }
