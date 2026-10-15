@@ -1,8 +1,0 @@
-{
-  "name": "Clube de Leitura Grancont",
-  "description": "Sistema de gerenciamento de biblioteca corporativa e empréstimo de livros.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}
