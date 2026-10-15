@@ -101,3 +101,34 @@ test("R2 returns null only for missing objects", async () => {
   status = 403;
   await assert.rejects(bucket.get(key), /Não foi possível carregar/);
 });
+
+test("Node runtime reuses bindings when preparing and submitting a transaction", async () => {
+  const originalFetch = globalThis.fetch;
+  const previous = Object.fromEntries(Object.keys(config).map(key => [key, process.env[key]]));
+  let calls = 0;
+  try {
+    Object.assign(process.env, config);
+    globalThis.fetch = (async () => {
+      calls++;
+      return Response.json({ success: true, result: [
+        { success: true, results: [], meta: { changes: 1 } },
+        { success: true, results: [], meta: { changes: 1 } },
+      ] });
+    }) as typeof fetch;
+    const { env, TRUST_PLATFORM_AUTH } = await import("../lib/runtime-vercel");
+    assert.equal(TRUST_PLATFORM_AUTH, false);
+    assert.equal(env.TRANSITION_IMPORT_KEY, undefined);
+    assert.equal(env.DB, env.DB);
+    const result = await env.DB!.batch([
+      env.DB!.prepare("DELETE FROM auth_sessions WHERE expires_at<?").bind(1),
+      env.DB!.prepare("UPDATE auth_users SET last_login=? WHERE id=?").bind("2026-10-15", "test"),
+    ]);
+    assert.equal(calls, 1);
+    assert.equal(result.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
