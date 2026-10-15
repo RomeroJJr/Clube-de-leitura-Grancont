@@ -64,6 +64,8 @@ Capas são armazenadas em R2. Uploads exigem perfil administrativo, assinatura P
 
 ## Desenvolvimento e validação
 
+Para publicar na Vercel, siga [DEPLOYMENT.md](./DEPLOYMENT.md). O build da Vercel usa Next.js e exige configuração própria de banco, armazenamento e segredos no servidor.
+
 Projeto Vinext/React/TypeScript, com o runtime oficial de Sites e migrações Drizzle. Preserve a identidade em `.openai/hosting.json` ao atualizar o projeto.
 
 - Instalação: use o helper de dependências do plugin Sites.

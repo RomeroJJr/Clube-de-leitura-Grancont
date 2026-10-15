@@ -1,4 +1,4 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/runtime-env';
 import {checkOrigin,login,logout,platformActor,createSession,sessionActor,hashNewPassword,cookieToken} from '@/lib/auth-server';
 import {passwordHash,safeEqual,sha256} from '@/lib/auth-crypto';
 const reply=(data:any,status=200,cookie?:string)=>Response.json(data,{status,headers:{'Cache-Control':'no-store',...(cookie?{'Set-Cookie':cookie}:{})}});
