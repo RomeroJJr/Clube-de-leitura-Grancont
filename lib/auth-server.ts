@@ -1,8 +1,8 @@
-import {env} from 'cloudflare:workers';
+import {env,TRUST_PLATFORM_AUTH} from '@/lib/runtime-env';
 import {normalizeLogin,passwordHash,randomToken,safeEqual,sha256} from './auth-crypto';
 import type {Actor} from './domain';
 const COOKIE='__Host-grancont_session';export const SESSION_HOURS=8;
-export function platformActor(req:Request):Actor|null{const id=req.headers.get('oai-authenticated-user-id');if(!id)return null;let name=req.headers.get('oai-authenticated-user-full-name')||req.headers.get('oai-authenticated-user-email')?.split('@')[0]||'Proprietário';if(req.headers.get('oai-authenticated-user-full-name-encoding')==='percent-encoded-utf-8')try{name=decodeURIComponent(name);}catch{}return {id,email:req.headers.get('oai-authenticated-user-email')||'',name};}
+export function platformActor(req:Request):Actor|null{if(!TRUST_PLATFORM_AUTH)return null;const id=req.headers.get('oai-authenticated-user-id');if(!id)return null;let name=req.headers.get('oai-authenticated-user-full-name')||req.headers.get('oai-authenticated-user-email')?.split('@')[0]||'Proprietário';if(req.headers.get('oai-authenticated-user-full-name-encoding')==='percent-encoded-utf-8')try{name=decodeURIComponent(name);}catch{}return {id,email:req.headers.get('oai-authenticated-user-email')||'',name};}
 export function cookieToken(req:Request){return (req.headers.get('cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(COOKIE+'='))?.slice(COOKIE.length+1)||'';}
 export const clearSessionCookie=()=>`${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 export function checkOrigin(req:Request){const origin=req.headers.get('origin');if(origin&&new URL(origin).origin!==new URL(req.url).origin)throw new Error('Solicitação de origem inválida.');}

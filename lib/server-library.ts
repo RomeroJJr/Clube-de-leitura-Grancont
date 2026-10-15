@@ -1,9 +1,9 @@
 import { sessionActor,platformActor } from './auth-server';
 import { writeStatements } from './persistence';
-import { env } from 'cloudflare:workers';
+import { env, TRUST_PLATFORM_AUTH } from '@/lib/runtime-env';
 import { collections, defaultSettings, emptyState, roleOf, type Actor, type LibraryState } from './domain';
 export async function actorFrom(req:Request):Promise<Actor|null>{
- const user=await sessionActor(req);if(user)return user;
+ const user=await sessionActor(req);if(user)return user;if(!TRUST_PLATFORM_AUTH)return null;
  const count=await env.DB!.prepare('SELECT count(*) n FROM auth_users').first<any>();
  return count?.n?null:platformActor(req);
 }

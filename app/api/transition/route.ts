@@ -1,4 +1,4 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/runtime-env';
 import {safeEqual,sha256,normalizeLogin} from '@/lib/auth-crypto';
 import {hashNewPassword} from '@/lib/auth-server';
 import {convertLegacyExport} from '@/lib/legacy-import';

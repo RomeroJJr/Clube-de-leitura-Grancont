@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '@/lib/runtime-env';
 import { actorFrom, readLibrary } from '@/lib/server-library';
 import { roleOf } from '@/lib/domain';
 export async function POST(req:Request){
