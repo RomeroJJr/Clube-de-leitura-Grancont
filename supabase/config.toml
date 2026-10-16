@@ -1,0 +1,2 @@
+[functions.grancont-backend]
+verify_jwt = false
